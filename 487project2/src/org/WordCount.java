@@ -28,7 +28,7 @@ public class WordCount {
     private Text word = new Text();
         
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-    	System.out.println("Current Mapper Paragraph:" + value.toString());
+    	//System.out.println("Current Mapper Paragraph:" + value.toString());
         String line = value.toString();
         StringTokenizer tokenizer = new StringTokenizer(line);
         while (tokenizer.hasMoreTokens()) {
@@ -224,7 +224,8 @@ class ParagraphReader {
         }
     	else if(buffer[bufferPosn] != LF && foundFirstLF) {
     		//we only found 1 newline, replace it with a space
-    		buffer[bufferPosn-1] = ' ';
+    		if(bufferPosn>0)
+    			buffer[bufferPosn-1] = ' ';
     		foundFirstLF=false;
     	}
         if (prevCharCR) { //CR + notLF, we are at notLF
