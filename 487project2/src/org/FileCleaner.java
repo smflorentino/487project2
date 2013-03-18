@@ -50,7 +50,15 @@ public class FileCleaner {
 				break;
 			}
 			if(this.isValidLine(line)) {
-				out.write(line+'\n');
+				String line2 = "";
+				char c;
+				for(int i=0;i<line.length();i++) {
+					c=line.charAt(i);
+					if(isAlphaNumeric(Character.toLowerCase(c))) {
+						line2+=c;
+					}
+				}
+				out.write(line2+'\n');
 			}
 			else {
 			//	System.out.println("Found invalid line" + line);
@@ -80,5 +88,9 @@ public class FileCleaner {
 			return true;
 		}
 		return false;
+	}
+	
+	private boolean isAlphaNumeric(char c) {
+		return (c>='a' && c<='z') || (c>='0' && c<='9');
 	}
 }
