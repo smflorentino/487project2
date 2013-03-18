@@ -67,17 +67,18 @@ public class CooccuranceStripes {
  }*/
  public static class Reduce extends Reducer<Text, IntWritable, Text, HashMapWritable<Text,IntWritable>> {
 	 private static final IntWritable one = new IntWritable(1);
+	 private HashMapWritable<Text,IntWritable> Hf = new HashMapWritable<Text, IntWritable>();
     public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
       throws IOException, InterruptedException {
         int sum = 0;
-        HashMapWritable<Text,IntWritable> Hf = new HashMapWritable<Text, IntWritable>();
+        
         for (HashMapWritable<Text,IntWritable> val : values) {
-            sum(Hf,val);
+            sum(val); //sum(Hf, val)
         }
         context.write(key, Hf);
     }
     
-    private void sum(HashMapWritable<Text,IntWritable> Hf, HashMapWritable<Text,IntWritable> H) {
+    private void sum(HashMapWritable<Text,IntWritable> H) {
     	Iterator it = H.entrySet().iterator();
     	while(it.hasNext()) {
     		java.util.Map.Entry pair = (java.util.Map.Entry) it.next();
