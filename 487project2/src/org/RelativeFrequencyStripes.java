@@ -66,7 +66,7 @@ public class RelativeFrequencyStripes {
 	}
 	 
  }*/
- public static class Reduce extends Reducer<Text, HashMapWritable<Text,IntWritable>, Text, FloatWritable> {
+ public static class Reduce extends Reducer<Text, HashMapWritable<Text,IntWritable>, TextPair, FloatWritable> {
 	 private static final IntWritable one = new IntWritable(1);
 	 private HashMapWritable<Text,IntWritable> Hf = new HashMapWritable<Text, IntWritable>();
     public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
@@ -87,7 +87,7 @@ public class RelativeFrequencyStripes {
     	while(it.hasNext()) {
     		pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
     		joint = pair.getValue().get();
-    		context.write(key, new FloatWritable(joint/marginal));
+    		context.write(new TextPair(key,pair.getKey()), new FloatWritable(joint/marginal));
     	}
     	
         //context.write(key, Hf);
@@ -128,7 +128,11 @@ public class RelativeFrequencyStripes {
         
         Job job = new Job(conf, "wordcount");
     
-    job.setOutputKeyClass(Text.class);
+    //output of mappers
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(HashMapWritable.class);
+    //output of reducers
+    job.setOutputKeyClass(TextPair.class);
     job.setOutputValueClass(FloatWritable.class);
         
     job.setMapperClass(Map.class);

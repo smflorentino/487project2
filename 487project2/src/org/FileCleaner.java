@@ -55,7 +55,7 @@ public class FileCleaner {
 				char c;
 				for(int i=0;i<line.length();i++) {
 					c=line.charAt(i);
-					if(isAlphaNumeric(Character.toLowerCase(c))) {
+					if(isAlphaNumericOrWhiteSpace(Character.toLowerCase(c))) {
 						line2+=c;
 					}
 				}
@@ -91,7 +91,7 @@ public class FileCleaner {
 		return false;
 	}
 	
-	private boolean isAlphaNumeric(char c) {
-		return (c>='a' && c<='z') || (c>='0' && c<='9');
+	private boolean isAlphaNumericOrWhiteSpace(char c) {
+		return (c>='a' && c<='z') || (c>='0' && c<='9') || (c==' '|| c== '\n' || c=='\t');
 	}
 }

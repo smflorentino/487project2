@@ -8,6 +8,5 @@
 	<classpathentry kind="lib" path="lib/hadoop-0.20.1-test.jar"/>
 	<classpathentry kind="lib" path="lib/hadoop-0.20.1-tools.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="lib" path="lib/HashMapWritable.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
