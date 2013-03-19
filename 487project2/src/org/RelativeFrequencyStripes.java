@@ -28,7 +28,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import org.apache.hadoop.util.LineReader;// HashMapWritable, used to Provide Associative Array Functionality.
 
         
-public class CooccuranceStripes {
+public class RelativeFrequencyStripes {
         
  public static class Map extends Mapper<LongWritable, Text, Text, HashMapWritable<Text,IntWritable>> {
     private final static IntWritable one = new IntWritable(1);
@@ -66,7 +66,7 @@ public class CooccuranceStripes {
 	}
 	 
  }*/
- public static class Reduce extends Reducer<Text, IntWritable, Text, HashMapWritable<Text,IntWritable>> {
+ public static class Reduce extends Reducer<Text, HashMapWritable<Text,IntWritable>, Text, FloatWritable> {
 	 private static final IntWritable one = new IntWritable(1);
 	 private HashMapWritable<Text,IntWritable> Hf = new HashMapWritable<Text, IntWritable>();
     public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
@@ -76,8 +76,24 @@ public class CooccuranceStripes {
         for (HashMapWritable<Text,IntWritable> val : values) {
             sum(val); //sum(Hf, val)
         }
-        context.write(key, Hf);
+        //now all of the input keys are added. now we need to compute the joint and marginal events
+        float marginal = marginal();
+        
+        //get the joint event for EACH co-occuring word in the HashMap
+        //iterate through Hf
+        java.util.Map.Entry<Text, IntWritable> pair;
+    	Iterator<Entry<Text, IntWritable>> it = Hf.entrySet().iterator();
+    	float joint;
+    	while(it.hasNext()) {
+    		pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
+    		joint = pair.getValue().get();
+    		context.write(key, new FloatWritable(joint/marginal));
+    	}
+    	
+        //context.write(key, Hf);
     }
+    
+    
     
     private void sum(HashMapWritable<Text,IntWritable> H) {
     	Iterator it = H.entrySet().iterator();
@@ -92,6 +108,19 @@ public class CooccuranceStripes {
     		}
     	}
     }
+ 
+    private float marginal() {
+    	float ret =0;
+    	java.util.Map.Entry<Text, IntWritable> pair;
+    	Iterator<Entry<Text, IntWritable>> it = Hf.entrySet().iterator();
+    	while(it.hasNext()) {
+    		pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
+    		ret = ret + pair.getValue().get();
+    	}
+    	return ret;
+    }
+ 
+ 
  }
         
  public static void main(String[] args) throws Exception {
@@ -100,7 +129,7 @@ public class CooccuranceStripes {
         Job job = new Job(conf, "wordcount");
     
     job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(HashMapWritable.class);
+    job.setOutputValueClass(FloatWritable.class);
         
     job.setMapperClass(Map.class);
     job.setReducerClass(Reduce.class);
@@ -110,7 +139,7 @@ public class CooccuranceStripes {
         
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
-    job.setJarByClass(CooccuranceStripes.class);
+    job.setJarByClass(RelativeFrequencyStripes.class);
     job.waitForCompletion(true);
  }
         

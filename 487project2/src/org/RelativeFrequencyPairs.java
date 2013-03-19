@@ -1,14 +1,10 @@
 package org;
-/**
- * HashMapWritable Provided by: http://lintool.github.com/Cloud9/
- * TextPair Provided by: http://my.safaribooksonline.com/book/databases/hadoop/9780596521974/serialization/id3548156
- */
+        
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.Map.Entry;
         
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,15 +21,14 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 //import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-//import org.apache.hadoop.util.LineReader;// HashMapWritable, used to Provide Associative Array Functionality.
-
+import org.apache.hadoop.util.LineReader;
         
-public class CooccuranceStripes {
+public class RelativeFrequencyPairs {
         
- public static class Map extends Mapper<LongWritable, Text, Text, HashMapWritable<Text,IntWritable>> {
+ public static class Map extends Mapper<LongWritable, Text, TextPair, IntWritable> {
     private final static IntWritable one = new IntWritable(1);
-    private HashMapWritable<Text,IntWritable> H;
-        
+    private TextPair word = new TextPair();
+    private String w;
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	//System.out.println(value.toString());
         String line = value.toString();
@@ -41,56 +36,34 @@ public class CooccuranceStripes {
         StringTokenizer tokenizer = new StringTokenizer(line);
         StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
         while (tokenizer.hasMoreTokens()) {
-        	H=new HashMapWritable<Text, IntWritable>();
+        	w=tokenizer.nextToken();
            while(tokenizer2.hasMoreTokens()) {
-        	   Text t = new Text(tokenizer2.nextToken());
-        	   if(H.get(t) == null) {
-        		   H.put(t, one);
-        	   } else {
-        		   IntWritable sum = new IntWritable( ((IntWritable) H.get(t)).get() + one.get());
-        		   H.put(t, sum);
-        	   }
-        	   
+        	   word = new TextPair(w, tokenizer2.nextToken());
+        	   context.write(word, one);
            }
-           tokenizer2 = new StringTokenizer(neighbors);
-           context.write(new Text(tokenizer.nextToken()), H);
+           tokenizer2= new StringTokenizer(neighbors);
         }
     }
  } 
  
-/*class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
+public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
 
+	public LeftWordPartitioner() {}
 	@Override
 	public int getPartition(TextPair arg0, IntWritable arg1, int numReduceTasks) {
 		return (arg0.getFirst().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
 	}
 	 
- }*/
- public static class Reduce extends Reducer<Text, IntWritable, Text, HashMapWritable<Text,IntWritable>> {
-	 private static final IntWritable one = new IntWritable(1);
-	 private HashMapWritable<Text,IntWritable> Hf = new HashMapWritable<Text, IntWritable>();
-    public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
+ }
+ public static class Reduce extends Reducer<TextPair, IntWritable, TextPair, IntWritable> {
+
+    public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
         int sum = 0;
-        
-        for (HashMapWritable<Text,IntWritable> val : values) {
-            sum(val); //sum(Hf, val)
+        for (IntWritable val : values) {
+            sum += val.get();
         }
-        context.write(key, Hf);
-    }
-    
-    private void sum(HashMapWritable<Text,IntWritable> H) {
-    	Iterator it = H.entrySet().iterator();
-    	while(it.hasNext()) {
-    		java.util.Map.Entry pair = (java.util.Map.Entry) it.next();
-    		if(Hf.containsKey(pair.getKey())) {
-    			Text t= (Text) pair.getKey();
-    			IntWritable sum = new IntWritable( ((IntWritable) Hf.get(t)).get() + one.get());
-     		   H.put(t, sum);
-    		} else {
-    			Hf.put((Text)pair.getKey(), new IntWritable(1));
-    		}
-    	}
+        context.write(key, new IntWritable(sum));
     }
  }
         
@@ -99,18 +72,18 @@ public class CooccuranceStripes {
         
         Job job = new Job(conf, "wordcount");
     
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(HashMapWritable.class);
+    job.setOutputKeyClass(TextPair.class);
+    job.setOutputValueClass(IntWritable.class);
         
     job.setMapperClass(Map.class);
     job.setReducerClass(Reduce.class);
-   // job.setPartitionerClass(LeftWordPartitioner.class);
+    job.setPartitionerClass(LeftWordPartitioner.class);
     job.setInputFormatClass(ParagraphInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
         
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
-    job.setJarByClass(CooccuranceStripes.class);
+    job.setJarByClass(RelativeFrequencyPairs.class);
     job.waitForCompletion(true);
  }
         
@@ -518,134 +491,4 @@ class ParagraphRecordReader extends RecordReader<LongWritable, Text> {
       in.close(); 
     }
   }
-}
-
-//HashMapWritable, provided by http://lintool.github.com/Cloud9/
-/*
- * Cloud9: A MapReduce Library for Hadoop
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you
- * may not use this file except in compliance with the License. You may
- * obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-
-/**
- * <p>
- * Writable extension of a Java HashMap. This generic class supports the use of
- * any type as either key or value. For a feature vector, {@link HMapKIW},
- * {@link HMapKFW}, and a family of related classes provides a more efficient
- * implementation.
- * </p>
- *
- * <p>
- * There are a number of key differences between this class and Hadoop's
- * {@link MapWritable}:
- * </p>
- *
- * <ul>
- *
- * <li><code>MapWritable</code> is more flexible in that it supports
- * heterogeneous elements. In this class, all keys must be of the same type and
- * all values must be of the same type. This assumption allows a simpler
- * serialization protocol and thus is more efficient. Run <code>main</code> in
- * this class for a simple efficiency test.</li>
- *
- * </ul>
- *
- * @param <K> type of the key
- * @param <V> type of the value
- *
- * @author Jimmy Lin
- * @author Tamer Elsayed
- */
-class HashMapWritable<K extends Writable, V extends Writable> extends HashMap<K, V> implements Writable {
-	private static final long serialVersionUID = -7549423384046548469L;
-
-	/**
-	 * Creates a HashMapWritable object.
-	 */
-	public HashMapWritable() {
-		super();
-	}
-
-	/**
-	 * Creates a HashMapWritable object from a regular HashMap.
-	 */
-	public HashMapWritable(HashMap<K, V> map) {
-		super(map);
-	}
-
-	/**
-	 * Deserializes the array.
-	 *
-	 * @param in source for raw byte representation
-	 */
-	@SuppressWarnings("unchecked")
-	public void readFields(DataInput in) throws IOException {
-
-		this.clear();
-
-		int numEntries = in.readInt();
-		if (numEntries == 0)
-			return;
-
-		String keyClassName = in.readUTF();
-		String valueClassName = in.readUTF();
-
-		K objK;
-		V objV;
-		try {
-			Class keyClass = Class.forName(keyClassName);
-			Class valueClass = Class.forName(valueClassName);
-			for (int i = 0; i < numEntries; i++) {
-				objK = (K) keyClass.newInstance();
-				objK.readFields(in);
-				objV = (V) valueClass.newInstance();
-				objV.readFields(in);
-				put(objK, objV);
-			}
-
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Serializes this array.
-	 *
-	 * @param out where to write the raw byte representation
-	 */
-	public void write(DataOutput out) throws IOException {
-		// Write out the number of entries in the map.
-		out.writeInt(size());
-		if (size() == 0)
-			return;
-
-		// Write out the class names for keys and values assuming that all entries have the same type.
-		Set<Map.Entry<K, V>> entries = entrySet();
-		Map.Entry<K, V> first = entries.iterator().next();
-		K objK = first.getKey();
-		V objV = first.getValue();
-		out.writeUTF(objK.getClass().getCanonicalName());
-		out.writeUTF(objV.getClass().getCanonicalName());
-
-		// Then write out each key/value pair.
-		for (Map.Entry<K, V> e : entrySet()) {
-			e.getKey().write(out);
-			e.getValue().write(out);
-		}
-	}
 }

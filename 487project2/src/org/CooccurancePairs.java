@@ -28,7 +28,7 @@ public class CooccurancePairs {
  public static class Map extends Mapper<LongWritable, Text, TextPair, IntWritable> {
     private final static IntWritable one = new IntWritable(1);
     private TextPair word = new TextPair();
-        
+    private String w;
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	//System.out.println(value.toString());
         String line = value.toString();
@@ -36,16 +36,19 @@ public class CooccurancePairs {
         StringTokenizer tokenizer = new StringTokenizer(line);
         StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
         while (tokenizer.hasMoreTokens()) {
+        	w=tokenizer.nextToken();
            while(tokenizer2.hasMoreTokens()) {
-        	   word = new TextPair(tokenizer.nextToken(), tokenizer2.nextToken());
+        	   word = new TextPair(w, tokenizer2.nextToken());
         	   context.write(word, one);
            }
+           tokenizer2= new StringTokenizer(neighbors);
         }
     }
  } 
  
-class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
+public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
 
+	public LeftWordPartitioner() {}
 	@Override
 	public int getPartition(TextPair arg0, IntWritable arg1, int numReduceTasks) {
 		return (arg0.getFirst().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
@@ -69,7 +72,7 @@ class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
         
         Job job = new Job(conf, "wordcount");
     
-    job.setOutputKeyClass(Text.class);
+    job.setOutputKeyClass(TextPair.class);
     job.setOutputValueClass(IntWritable.class);
         
     job.setMapperClass(Map.class);

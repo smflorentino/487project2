@@ -42,6 +42,7 @@ public class FileCleaner {
 		BufferedWriter out = new BufferedWriter(fs);
 		
 		String line;
+		String line2;
 		int linenum=0;
 		while(true) {
 			//System.out.println("Line:" + linenum);
@@ -50,7 +51,7 @@ public class FileCleaner {
 				break;
 			}
 			if(this.isValidLine(line)) {
-				String line2 = "";
+				line2 = "";
 				char c;
 				for(int i=0;i<line.length();i++) {
 					c=line.charAt(i);
