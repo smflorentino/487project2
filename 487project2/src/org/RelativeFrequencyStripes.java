@@ -81,15 +81,15 @@ public class RelativeFrequencyStripes {
         
         //get the joint event for EACH co-occuring word in the HashMap
         //iterate through Hf
-        java.util.Map.Entry<Text, IntWritable> pair;
+        java.util.Map.Entry<Text, IntWritable> pair=null;
     	Iterator<Entry<Text, IntWritable>> it = Hf.entrySet().iterator();
-    	float joint;
+    	float joint=0;
     	while(it.hasNext()) {
     		pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
-    		joint = pair.getValue().get();
-    		context.write(new TextPair(key,pair.getKey()), new FloatWritable(joint/marginal));
+    		joint += pair.getValue().get();
+    		
     	}
-    	
+    	context.write(new TextPair(key,pair.getKey()), new FloatWritable(joint/marginal));
         //context.write(key, Hf);
     }
     

@@ -30,20 +30,86 @@ public class CooccurancePairs {
     private TextPair word = new TextPair();
     private String w;
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+    	String n="";
     	//System.out.println(value.toString());
         String line = value.toString();
         String neighbors = value.toString();
         StringTokenizer tokenizer = new StringTokenizer(line);
         StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
+        int wpos=0;
+        int npos=0;
+        HashMap<String, Integer> processedWords = new HashMap<String, Integer>();
+        while(tokenizer.hasMoreTokens()) {
+    	w=tokenizer.nextToken();
+    	while(tokenizer2.hasMoreTokens()) {
+    		n=tokenizer2.nextToken();
+    		System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w);
+    		if(npos!=wpos) { //this is our WORKING "neighbors" function
+    			if(n.equals(w)) {
+    				if(processedWords.get(n) == null) {
+    					context.write(new TextPair(w,n),one);
+    				}
+    			} else {
+    				context.write(new TextPair(w,n),one);
+    			}
+    		}
+    		npos++;
+    	}
+    	processedWords.put(w, 1);
+    	npos=0;
+    	wpos++;
+    	tokenizer2=new StringTokenizer(neighbors);
+    }
+        
+        
+        /*while(tokenizer.hasMoreTokens()) {
+        	w=tokenizer.nextToken();
+        	while(tokenizer2.hasMoreTokens()) {
+        		n=tokenizer2.nextToken();
+        		System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w);
+        		if(npos!=wpos) { //this is our "neighbors" function
+        			if(wpos >0 && !(w.equals(n))) {
+        				context.write(new TextPair(w,n),one);
+        				System.out.println("if1");//"WPOS: " + wpos + " NPOS: " + npos + w.toString() + "," + n.toString());
+        			}
+        			else if(wpos==0) {
+        				context.write(new TextPair(w,n), one);
+        				System.out.println("if2");//"WPOS: " + wpos + " NPOS: " + npos + w.toString() + "," + n.toString());
+            		}
+        		}
+        		npos++;
+        	}
+        	npos=0;
+        	wpos++;
+        	tokenizer2=new StringTokenizer(neighbors);
+        }*/
+        
+        /*boolean foundItself=false;
+         
         while (tokenizer.hasMoreTokens()) {
         	w=tokenizer.nextToken();
            while(tokenizer2.hasMoreTokens()) {
-        	   word = new TextPair(w, tokenizer2.nextToken());
-        	   context.write(word, one);
+        	   n=tokenizer2.nextToken();
+        	   if(w.equals(n)) {
+        		   if(!foundItself) {
+        			   foundItself=true;
+        		   } else {
+        			   word= new TextPair(w,n);
+        			   context.write(word, one);
+        		   }
+        	   } 
+        	   else {
+        		   word = new TextPair(w, n);
+            	   context.write(word, one);
+        	   }
+        	   
            }
            tokenizer2= new StringTokenizer(neighbors);
-        }
+           foundItself=false;
+        }*/
     }
+    
+   
  } 
  
 public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
