@@ -48,34 +48,39 @@ public class CooccuranceStripes {
 				w=new Text(tokenizer.nextToken());
 				while(tokenizer2.hasMoreTokens()) {
 					n=new Text(tokenizer2.nextToken());
+					//System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w + "HashMap:" + H);
 					if(npos !=wpos) {
 						if(n.toString().equals(w.toString())) {
 							if(processedWords.get(n) == null) {
 								if(H.get(n) == null) {
+									//System.out.println("Adding N:" + n +"," + "1");
 									H.put(n, one);
 								} else {
 									IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
+									//System.out.println("Adding N:" + n +"," + sum);
 									H.put(n, sum);
 								}   
 							}
 						}
-					}
-					else {
-						if(H.get(n) == null) {
-							H.put(n, one);
-						} else {
-							IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
-							H.put(n, sum);
+						else {
+							if(H.get(n) == null) {
+								H.put(n, one);
+								//System.out.println("Added One N. New Map:" + H);
+							} else {
+								IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
+								H.put(n, sum);
+								//System.out.println("Added another N. New Map:"+ H);
+							}
 						}
 					}
-
+					
 					npos++;  
 				}
 				npos=0;
 				wpos++;
 				processedWords.put(w,1);
 				tokenizer2 = new StringTokenizer(neighbors);
-				System.out.println("Emmtting KV" + w.hashCode() + w.toString() + H.toString());
+				System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
 				context.write(w, H);
 			}
 		}
@@ -97,10 +102,11 @@ public class CooccuranceStripes {
 	}*/
 
 	}
-	public static class Reduce extends Reducer<Text, HashMapWritable<Text, IntWritable>, Text, HashMapWritable<Text,IntWritable>> {
+	public static class Reduce1 extends Reducer<Text, HashMapWritable<Text, IntWritable>, Text, HashMapWritable<Text,IntWritable>> {
 		private static final IntWritable one = new IntWritable(1);
 		private HashMapWritable<Text,IntWritable> Hf;// = new HashMapWritable<Text, IntWritable>();
 
+		@Override
 		public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
 				throws IOException, InterruptedException {
 			Hf=new HashMapWritable<Text, IntWritable>();
@@ -109,7 +115,7 @@ public class CooccuranceStripes {
 			for (HashMapWritable<Text,IntWritable> val : values) {
 				sum(val); //sum(Hf, val)
 			}
-			System.out.println("Emmtting KV" + key.toString() + "  " + Hf.toString());
+			System.out.println("Reducer - Emmtting KV" + key.toString() + "  " + Hf.toString()+"\n\n");
 			context.write(key, Hf);
 		}
 
@@ -118,18 +124,20 @@ public class CooccuranceStripes {
 			for(Entry<Text, IntWritable> pair : H.entrySet()) {
 				//java.util.Map.Entry<Text, IntWritable> pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
 				t= (Text) (pair.getKey());
+				System.out.println("Currently Processing..............: "+ t.toString());
+				int current = (int) pair.getValue().get();
 				if(Hf.containsKey(t)) {
 					//Text t= (Text) pair.getKey();
-					int current = (int) pair.getValue().get();
+					
 
-					IntWritable sum = new IntWritable(current+1);
+					IntWritable sum = new IntWritable(current+Hf.get(t).get());
 					Hf.put(t, sum);
-					System.out.println("Item Found Current:" + current + "word: " + t.toString());
+					System.out.println("Item Found! New Count: " + current + "word: " + t.toString());
 				} else {
 					System.out.println("Item Found for the First Time - word: " + t.toString());
-					Hf.put(t, new IntWritable(1));
+					Hf.put(t, new IntWritable(current));
 				}
-				System.out.println("HashMap: " + Hf.toString());
+				System.out.println("Done with that word. HashMap: " + Hf.toString());
 			}
 		}
 	}
@@ -138,12 +146,13 @@ public class CooccuranceStripes {
 		Configuration conf = new Configuration();
 
 		Job job = new Job(conf, "wordcount");
-
+		job.setJarByClass(CooccuranceStripes.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce1.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(HashMapWritable.class);
 
-		job.setMapperClass(Map.class);
-		job.setReducerClass(Reduce.class);
+		
 
 		job.setPartitionerClass(TextPartitioner.class);
 		job.setInputFormatClass(ParagraphInputFormat.class);
@@ -151,7 +160,7 @@ public class CooccuranceStripes {
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		job.setJarByClass(CooccuranceStripes.class);
+		
 		job.waitForCompletion(true);
 	}
 

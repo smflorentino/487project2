@@ -47,6 +47,7 @@ public class CooccurancePairs {
     		if(npos!=wpos) { //this is our WORKING "neighbors" function
     			if(n.equals(w)) {
     				if(processedWords.get(n) == null) {
+    					System.out.println("Adding N:" + n +"," + "1");
     					context.write(new TextPair(w,n),one);
     				}
     			} else {
@@ -129,6 +130,7 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
         for (IntWritable val : values) {
             sum += val.get();
         }
+        System.out.println("test");
         context.write(key, new IntWritable(sum));
     }
  }
