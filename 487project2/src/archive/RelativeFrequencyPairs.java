@@ -1,10 +1,11 @@
-package org;
+package archive;
         
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.Map.Entry;
         
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,90 +30,66 @@ public class RelativeFrequencyPairs {
     private final static IntWritable one = new IntWritable(1);
     private TextPair word = new TextPair();
     private String w;
+
+    //private 
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-    	String n="";
     	//System.out.println(value.toString());
-        String line = value.toString();
+        HashMap<String, Integer> hm = new HashMap<String, Integer>();
+    	String line = value.toString();
         String neighbors = value.toString();
         StringTokenizer tokenizer = new StringTokenizer(line);
         StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
-        int wpos=0;
-        int npos=0;
-        HashMap<String, Integer> processedWords = new HashMap<String, Integer>();
-        while(tokenizer.hasMoreTokens()) {
-    	w=tokenizer.nextToken();
-    	while(tokenizer2.hasMoreTokens()) {
-    		n=tokenizer2.nextToken();
-    		System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w);
-    		if(npos!=wpos) { //this is our WORKING "neighbors" function
-    			if(n.equals(w)) {
-    				if(processedWords.get(n) == null) {
-    					System.out.println("Adding N:" + n +"," + "1");
-    					context.write(new TextPair(w,n),one);
-    				}
-    			} else {
-    				context.write(new TextPair(w,n),one);
-    			}
-    		}
-    		npos++;
-    	}
-    	processedWords.put(w, 1);
-    	npos=0;
-    	wpos++;
-    	tokenizer2=new StringTokenizer(neighbors);
-    }
-        
-        
-        /*while(tokenizer.hasMoreTokens()) {
-        	w=tokenizer.nextToken();
-        	while(tokenizer2.hasMoreTokens()) {
-        		n=tokenizer2.nextToken();
-        		System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w);
-        		if(npos!=wpos) { //this is our "neighbors" function
-        			if(wpos >0 && !(w.equals(n))) {
-        				context.write(new TextPair(w,n),one);
-        				System.out.println("if1");//"WPOS: " + wpos + " NPOS: " + npos + w.toString() + "," + n.toString());
-        			}
-        			else if(wpos==0) {
-        				context.write(new TextPair(w,n), one);
-        				System.out.println("if2");//"WPOS: " + wpos + " NPOS: " + npos + w.toString() + "," + n.toString());
-            		}
-        		}
-        		npos++;
-        	}
-        	npos=0;
-        	wpos++;
-        	tokenizer2=new StringTokenizer(neighbors);
-        }*/
-        
-        /*boolean foundItself=false;
-         
         while (tokenizer.hasMoreTokens()) {
         	w=tokenizer.nextToken();
+        	
+        	if(hm.containsKey(w)) {
+        		hm.put(w, hm.get(w)+1);
+        	}
+        	else {
+        		hm.put(w,1);
+        	}
+        	
            while(tokenizer2.hasMoreTokens()) {
-        	   n=tokenizer2.nextToken();
-        	   if(w.equals(n)) {
-        		   if(!foundItself) {
-        			   foundItself=true;
-        		   } else {
-        			   word= new TextPair(w,n);
-        			   context.write(word, one);
-        		   }
-        	   } 
-        	   else {
-        		   word = new TextPair(w, n);
-            	   context.write(word, one);
-        	   }
-        	   
+        	   word = new TextPair(w, tokenizer2.nextToken());
+        	   context.write(word, one);
            }
            tokenizer2= new StringTokenizer(neighbors);
-           foundItself=false;
-        }*/
+        }
+        
+        //emit special pairs
+        java.util.Map.Entry<String, Integer> pair;
+    	Iterator<Entry<String, Integer>> it = hm.entrySet().iterator();
+    	Text t; IntWritable i;
+    	while(it.hasNext()) {
+    		pair=it.next();
+    		t=new Text(pair.getKey());
+    		i = new IntWritable(pair.getValue());
+    		context.write(new TextPair(t, new Text("*")), i);
+    	}
+        
     }
-    
-   
  } 
  
+
+public static class TextPairComparator implements Comparator<TextPair> {
+	private static final String SPECIAL = "*";
+	@Override
+	public int compare(TextPair o1, TextPair o2) {
+		if(o1.getFirst().compareTo(o2.getFirst()) == 0) {
+			if(o1.getSecond().toString().equals(SPECIAL)) {
+				return -1;
+			}
+			else {
+				return 1;
+			}
+		} 
+		else{
+			return o1.compareTo(o2);
+		}
+	}
+	
+}
+
 public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
 
 	public LeftWordPartitioner() {}
@@ -122,16 +99,28 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	}
 	 
  }
- public static class Reduce extends Reducer<TextPair, IntWritable, TextPair, IntWritable> {
 
+
+ public static class Reduce extends Reducer<TextPair, IntWritable, TextPair, FloatWritable> {
+	 private static final String SPECIAL = "*";
+	 private float _marginal = 0;
     public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
-        int sum = 0;
-        for (IntWritable val : values) {
-            sum += val.get();
+        
+        if(key.getSecond().toString().equals(SPECIAL)) {
+        	_marginal++;
         }
-        System.out.println("test");
-        context.write(key, new IntWritable(sum));
+        else {
+        	float sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            context.write(key, new FloatWritable(sum/_marginal));
+            _marginal =0;
+        }
+    	
+    	
+    	
     }
  }
         
@@ -140,8 +129,13 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
         
         Job job = new Job(conf, "wordcount");
     
+    //outputs of mappers
+    job.setMapOutputKeyClass(TextPair.class);
+    job.setMapOutputValueClass(IntWritable.class);
+    
+    //outputs of reducers
     job.setOutputKeyClass(TextPair.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputValueClass(FloatWritable.class);
         
     job.setMapperClass(Map.class);
     job.setReducerClass(Reduce.class);
@@ -560,3 +554,5 @@ class ParagraphRecordReader extends RecordReader<LongWritable, Text> {
     }
   }
 }
+
+
