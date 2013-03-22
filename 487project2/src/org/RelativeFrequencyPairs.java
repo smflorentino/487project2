@@ -68,10 +68,12 @@ public class RelativeFrequencyPairs {
 					//			System.out.println("Adding N:" + n +"," + "1");
 								System.out.println("Emitting KV Pair: "+ w + "," + n);
 								context.write(new TextPair(w,n),one);
+								context.write(new TextPair(w,"*"), one);
 							}
 						} else {
 							System.out.println("Emitting KV Pair: "+ w + "," + n);
 							context.write(new TextPair(w,n),one);
+							context.write(new TextPair(w,"*"), one);
 						}
 					}
 					npos++;
@@ -83,7 +85,7 @@ public class RelativeFrequencyPairs {
 			}
 			
 			//emit special pairs
-			
+			/*
 			java.util.Map.Entry<String, Integer> pair;
 	    	Iterator<Entry<String, Integer>> it = hm.entrySet().iterator();
 	    	Text t; IntWritable i;
@@ -93,7 +95,7 @@ public class RelativeFrequencyPairs {
 	    		i = new IntWritable(pair.getValue());
 	    		System.out.println("Emitting KV Pair: "+ t + ",* I:" + i);
 	    		context.write(new TextPair(t, new Text("*")), i);
-	    	}
+	    	}*/
 	    	//end emit special map pairs
 
 		}
@@ -166,10 +168,13 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	 private static final char SPECIAL = '*';
 	 private float _marginal = 0;
 	 private float _sum=0;
+	 
     public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
        System.out.print("\nReducer Key: " + key.getFirst() + "," + key.getSecond());
+       System.out.println("\nMarginal: " + _marginal + " Sum: " + _sum);
         if(key.getSecond().toString().charAt(0) == SPECIAL) {
+        	_sum=0;
         	_marginal=0;
         	for (IntWritable val : values) {
                 
@@ -185,8 +190,9 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
           //  System.out.println("test");
             context.write(key, new FloatWritable(_sum/_marginal));
             //_marginal =0;
-            _sum=0;
+           _sum=0;
         }
+        System.out.println("Marginal: " + _marginal + " Sum: " + _sum);
         System.out.println("\n\n------------------------------End Reducer-----------------------------");
     }
  }
