@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.Map.Entry;
+//import java.util.Map.Entry;
         
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,7 +22,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 //import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.util.LineReader;
+//import org.apache.hadoop.util.LineReader;
 
 //import archive.TextPair;
 //import archive.RelativeFrequencyPairs.LeftWordPartitioner;
@@ -222,7 +222,10 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJarByClass(RelativeFrequencyPairs.class);
+    TimeTracker tt = new TimeTracker();
+    tt.writeStartTime();
     job.waitForCompletion(true);
+    tt.writeEndTime();
  }
         
 }
