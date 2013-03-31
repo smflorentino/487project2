@@ -31,6 +31,7 @@ public class RelativeFrequencyPairs {
         
 	public static class Map extends Mapper<LongWritable, Text, TextPair, IntWritable> {
 		private final static IntWritable one = new IntWritable(1);
+		private final static String STAR = "*";
 		//private final static IntWritable none = new IntWritable(-1);
 		private TextPair word = new TextPair();
 		private String w;
@@ -68,12 +69,12 @@ public class RelativeFrequencyPairs {
 					//			System.out.println("Adding N:" + n +"," + "1");
 								//System.out.println("Emitting KV Pair: "+ w + "," + n);
 								context.write(new TextPair(w,n),one);
-								context.write(new TextPair(w,"*"), one);
+								context.write(new TextPair(w,STAR), one);
 							}
 						} else {
 						//	System.out.println("Emitting KV Pair: "+ w + "," + n);
 							context.write(new TextPair(w,n),one);
-							context.write(new TextPair(w,"*"), one);
+							context.write(new TextPair(w,STAR), one);
 						}
 					}
 					npos++;
@@ -147,13 +148,13 @@ public class RelativeFrequencyPairs {
 	  }
 	
 public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
-
+	private static final char SPECIAL = '*';
 	public LeftWordPartitioner() {}
 	@Override
 	public int getPartition(TextPair key, IntWritable value, int numReduceTasks) {
 		TextPair arg0 = key;
 		Text sec = new Text(key.getFirst().toString());
-		if(key.getSecond().charAt(0)== '*') {
+		if(key.getSecond().charAt(0)== SPECIAL) {
 			
 			//System.out.println("*Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " " + sec.hashCode());
 			
@@ -166,8 +167,8 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
  }
  public static class Reduce extends Reducer<TextPair, IntWritable, TextPair, FloatWritable> {
 	 private static final char SPECIAL = '*';
-	 private float _marginal = 0;
-	 private float _sum=0;
+	 private int _marginal = 0;
+	 private int _sum=0;
 	 
     public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
@@ -188,7 +189,7 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
                 _sum += val.get();
             }
           //  System.out.println("test");
-            context.write(key, new FloatWritable(_sum/_marginal));
+            context.write(key, new FloatWritable( (float) _sum /_marginal));
             //_marginal =0;
            _sum=0;
         }
