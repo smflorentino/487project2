@@ -24,6 +24,7 @@ public class TimeTracker {
 			Date start = new Date();
 			_startTime=start.getTime();
 				_out.append("Starting MR Job: " + _df.format(start)+"\n");
+				System.out.println("**********Start: " + _df.format(start));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -36,6 +37,7 @@ public class TimeTracker {
 			_endTime=end.getTime();
 			long totaltime = (_endTime - _startTime) / 1000;
 		_out.append("Ending MR Job: " + _df.format(end)+"\n" + "Total seconds taken: " + totaltime + "\n");
+		System.out.println("**********End: " + _df.format(end));
 		_out.close();
 		} catch (IOException e) {
 			e.printStackTrace();

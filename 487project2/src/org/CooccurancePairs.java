@@ -152,7 +152,10 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJarByClass(CooccurancePairs.class);
+    TimeTracker tt = new TimeTracker();
+    tt.writeStartTime();
     job.waitForCompletion(true);
+    tt.writeEndTime();
  }
         
 }

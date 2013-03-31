@@ -180,8 +180,10 @@ public class RelativeFrequencyStripes {
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		
+		TimeTracker tt = new TimeTracker();
+	    tt.writeStartTime();
 		job.waitForCompletion(true);
+		tt.writeEndTime();
 	}
 
 }
