@@ -66,12 +66,12 @@ public class RelativeFrequencyPairs {
 						if(n.equals(w)) {
 							if(processedWords.get(n) == null) {
 					//			System.out.println("Adding N:" + n +"," + "1");
-								System.out.println("Emitting KV Pair: "+ w + "," + n);
+								//System.out.println("Emitting KV Pair: "+ w + "," + n);
 								context.write(new TextPair(w,n),one);
 								context.write(new TextPair(w,"*"), one);
 							}
 						} else {
-							System.out.println("Emitting KV Pair: "+ w + "," + n);
+						//	System.out.println("Emitting KV Pair: "+ w + "," + n);
 							context.write(new TextPair(w,n),one);
 							context.write(new TextPair(w,"*"), one);
 						}
@@ -155,11 +155,11 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 		Text sec = new Text(key.getFirst().toString());
 		if(key.getSecond().charAt(0)== '*') {
 			
-			System.out.println("*Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " " + sec.hashCode());
+			//System.out.println("*Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " " + sec.hashCode());
 			
 			return (arg0.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
 		}
-		System.out.println("Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " "+ sec.hashCode());
+		//System.out.println("Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " "+ sec.hashCode());
 		return (sec.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
 	}
 	 
@@ -171,20 +171,20 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	 
     public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
-       System.out.print("\nReducer Key: " + key.getFirst() + "," + key.getSecond());
-       System.out.println("\nMarginal: " + _marginal + " Sum: " + _sum);
+       //System.out.print("\nReducer Key: " + key.getFirst() + "," + key.getSecond());
+       //System.out.println("\nMarginal: " + _marginal + " Sum: " + _sum);
         if(key.getSecond().toString().charAt(0) == SPECIAL) {
         	_sum=0;
         	_marginal=0;
         	for (IntWritable val : values) {
                 
-        		System.out.print(" " + val.toString() + " ");
+        		//System.out.print(" " + val.toString() + " ");
         		_marginal += val.get();
             }  
-        	System.out.println("-");
+        	//System.out.println("-");
         } else {
         	for (IntWritable val : values) {
-        		System.out.print(" " + val.toString() + " ");
+        		//System.out.print(" " + val.toString() + " ");
                 _sum += val.get();
             }
           //  System.out.println("test");
@@ -192,8 +192,8 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
             //_marginal =0;
            _sum=0;
         }
-        System.out.println("Marginal: " + _marginal + " Sum: " + _sum);
-        System.out.println("\n\n------------------------------End Reducer-----------------------------");
+        //System.out.println("Marginal: " + _marginal + " Sum: " + _sum);
+        //System.out.println("\n\n------------------------------End Reducer-----------------------------");
     }
  }
         

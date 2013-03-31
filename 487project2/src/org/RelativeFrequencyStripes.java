@@ -80,7 +80,7 @@ public class RelativeFrequencyStripes {
 				wpos++;
 				processedWords.put(w,1);
 				tokenizer2 = new StringTokenizer(neighbors);
-				System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
+				//System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
 				context.write(w, H);
 			}
 		}

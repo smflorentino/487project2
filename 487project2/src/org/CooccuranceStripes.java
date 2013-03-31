@@ -35,7 +35,7 @@ public class CooccuranceStripes {
 		private HashMapWritable<Text,IntWritable> H;
 
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			//System.out.println(value.toString());
+			////System.out.println(value.toString());
 			String line = value.toString();
 			String neighbors = value.toString();
 			StringTokenizer tokenizer = new StringTokenizer(line);
@@ -80,7 +80,7 @@ public class CooccuranceStripes {
 				wpos++;
 				processedWords.put(w,1);
 				tokenizer2 = new StringTokenizer(neighbors);
-				System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
+				//System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
 				context.write(w, H);
 			}
 		}
@@ -115,7 +115,7 @@ public class CooccuranceStripes {
 			for (HashMapWritable<Text,IntWritable> val : values) {
 				sum(val); //sum(Hf, val)
 			}
-			System.out.println("Reducer - Emmtting KV" + key.toString() + "  " + Hf.toString()+"\n\n");
+			//System.out.println("Reducer - Emmtting KV" + key.toString() + "  " + Hf.toString()+"\n\n");
 			context.write(key, Hf);
 		}
 
@@ -124,7 +124,7 @@ public class CooccuranceStripes {
 			for(Entry<Text, IntWritable> pair : H.entrySet()) {
 				//java.util.Map.Entry<Text, IntWritable> pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
 				t= (Text) (pair.getKey());
-				System.out.println("Currently Processing..............: "+ t.toString());
+				//System.out.println("Currently Processing..............: "+ t.toString());
 				int current = (int) pair.getValue().get();
 				if(Hf.containsKey(t)) {
 					//Text t= (Text) pair.getKey();
@@ -132,12 +132,12 @@ public class CooccuranceStripes {
 
 					IntWritable sum = new IntWritable(current+Hf.get(t).get());
 					Hf.put(t, sum);
-					System.out.println("Item Found! New Count: " + current + "word: " + t.toString());
+					//System.out.println("Item Found! New Count: " + current + "word: " + t.toString());
 				} else {
-					System.out.println("Item Found for the First Time - word: " + t.toString());
+					//System.out.println("Item Found for the First Time - word: " + t.toString());
 					Hf.put(t, new IntWritable(current));
 				}
-				System.out.println("Done with that word. HashMap: " + Hf.toString());
+				//System.out.println("Done with that word. HashMap: " + Hf.toString());
 			}
 		}
 	}
