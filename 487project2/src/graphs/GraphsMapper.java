@@ -12,6 +12,13 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritable, ArrayWritable> {
+	public static enum GRAPHS_COUNTER {
+		  INCOMING_GRAPHS,
+		  PRUNING_BY_NCV,
+		  PRUNING_BY_COUNT,
+		  PRUNING_BY_ISO,
+		  ISOMORPHIC
+		};
 	
 	/*for node: 
 	[0] - nodeId
@@ -39,6 +46,8 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
     		String[] d = {newD.toString()};
     		context.write(lw_neighborNodeId, new ArrayWritable(d));
     	}
+    	//consider the node that was passed in as visited, so increment the counter
+    	context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
     	
     }
     
