@@ -2,6 +2,7 @@ package graphs;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 import org.apache.hadoop.io.IntWritable;
@@ -11,7 +12,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
+
 public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritable, ArrayWritable> {
+	
 	public static enum GRAPHS_COUNTER {
 		  INCOMING_GRAPHS,
 		  PRUNING_BY_NCV,
@@ -23,7 +26,9 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
 	/*for node: 
 	[0] - nodeId
 	[1] - distance from start node
-	[3] - node's adjacency list (TODO: formatted as...)
+	[2] - node's adjacency list in format 1:2:3
+	[3] - N if node not visited; Y if already visited
+
 	*/
 	/**Mapper for Dijkstra shortest path algorithm for graphs
 	 * @author Alyssa
@@ -31,22 +36,22 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
 	 * @param node - the metadata about the current node
 	 * @return -<key,value> pair of either <nodeId, node metadata> or <neighbor's nodeId, a distance to neighbor from start>
 	 */
-    public void map(LongWritable nodeId, ArrayWritable node, Context context) throws IOException, InterruptedException {
-    	String[] nodeArray = node.toStrings();
-    	char c = nodeArray[1].charAt(0);
-    	LongWritable distance = new LongWritable(Character.getNumericValue(c)); //get the distance of current node
-    	//emit the current node
-    	context.write(nodeId, node);
-    	//parse nodeArray[2] - adjacency "list" to get an actual list
-    	Long newD = distance.get() + 1;
-//    	LongWritable newDistance = new LongWritable(newD);
-    	for(Long neighborNodeId: this.getAdjacencyList(nodeArray[2])){
+    public void map(LongWritable nodeId, ArrayWritable nodeAW, Context context) throws IOException, InterruptedException {
+    	String[] nodeArray = nodeAW.toStrings();
+    	Node node = this.getNode(nodeArray);
+    	LongWritable distance = new LongWritable(node.getDistance());
+    	//emit the current node and mark as visited
+    	nodeArray[3] = "Y"; //TODO: only keep if counters don't work
+    	nodeAW = new ArrayWritable(nodeArray);
+    	context.write(nodeId, nodeAW);
+    	Long newDistance = distance.get() + 1;
+		String[] d = {newDistance.toString()};
+    	for(Long neighborNodeId: node.getNeighbors()){
     		LongWritable lw_neighborNodeId = new LongWritable(neighborNodeId);
     		//emit <neighborNodeId, newDistance>
-    		String[] d = {newD.toString()};
     		context.write(lw_neighborNodeId, new ArrayWritable(d));
     	}
-    	//consider the node that was passed in as visited, so increment the counter
+    	//consider the node that was passed in as visited, so increment the counter    	
     	context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
     	
     }
@@ -58,8 +63,32 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
      */
     public ArrayList<Long> getAdjacencyList(String s){
     	ArrayList<Long> list = new ArrayList<Long>();
-    	//TODO: implement string parsing to get adjacency list based on String format
+    	String neighbor="";
+    	for(int i=0; i<s.length(); i++){
+    		if(s.charAt(i)==':' && neighbor.length()>0){
+    			list.add((long) Integer.parseInt(neighbor));
+    			neighbor="";
+    		}else if(s.charAt(i)!='[' && s.charAt(i)!=']'){
+    			neighbor=neighbor + s.charAt(i);
+    		}
+    	}
+    	//add final neighbor (no closing colon)
+    	if(neighbor.length()>0){
+    		list.add((long) Integer.parseInt(neighbor));
+    	}
     	return list;
+    }
+    
+    
+    public Node getNode(String[] nodeArray){
+    	long id = (long) Integer.parseInt(nodeArray[0]);
+    	long distance = (long) Integer.parseInt(nodeArray[1]);
+    	List<Long> neighbors = this.getAdjacencyList(nodeArray[2]);
+    	boolean isVisited = false;
+    	if(nodeArray[3].equals("Y")){
+    		isVisited = true;
+    	}
+    	return new Node(id,distance,neighbors,isVisited);
     }
 
 }

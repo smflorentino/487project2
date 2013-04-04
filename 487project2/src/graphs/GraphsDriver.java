@@ -24,13 +24,15 @@ public class GraphsDriver  {
 		};
 	
 	public static void main(String args[]) throws Exception {
-		//TODO: what is the input format of the graph? File?
-		//TODO: determine the number of nodes in graph
+		//TODO: how to pass input to mapper as 
+		//TODO: determine the number of nodes in graph by parsing file
 		long numNodes=0;
 //		do{
 			 Configuration conf = new Configuration();
 		     
 		     Job job = new Job(conf, "Graphs");
+		     
+		     
 		     
 		     job.setOutputKeyClass(LongWritable.class);
 		     job.setOutputValueClass(ArrayWritable.class);
@@ -38,8 +40,13 @@ public class GraphsDriver  {
 		     job.setMapperClass(GraphsMapper.class);
 		     job.setReducerClass(GraphsReducer.class);
 
-		     FileInputFormat.addInputPath(job, new Path(args[0]));
-		     FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		     FileInputFormat.addInputPath(job, new Path("graphsData/testInput.txt"));
+		     FileOutputFormat.setOutputPath(job, new Path("graphsData/testOutput.txt"));
+
+		     
+//		     TODO: return to args after testing
+//		     FileInputFormat.addInputPath(job, new Path(args[0]));
+//		     FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		     
 		     job.setJarByClass(GraphsDriver.class);
 		     job.waitForCompletion(true);
@@ -60,4 +67,6 @@ public class GraphsDriver  {
 	//TODO: figure out how to use "counter"
 	
 //if not done, repeat. 
+	
+	
 }
