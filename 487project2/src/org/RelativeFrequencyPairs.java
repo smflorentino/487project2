@@ -109,23 +109,17 @@ public class RelativeFrequencyPairs {
 	    private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
 	    
 	    public TextPairComparator() {
-	      super(TextPair.class);
-	    }
-
-	    @Override
-	    public int compare(byte[] b1, int s1, int l1,
-	                       byte[] b2, int s2, int l2) {
-	      
-	      try {
-	        int firstL1 = WritableUtils.decodeVIntSize(b1[s1]) + readVInt(b1, s1);
-	        int firstL2 = WritableUtils.decodeVIntSize(b2[s2]) + readVInt(b2, s2);
-	        return TEXT_COMPARATOR.compare(b1, s1, firstL1, b2, s2, firstL2);
-	      } catch (IOException e) {
-	        throw new IllegalArgumentException(e);
-	      }
+	      super(TextPair.class,true);
 	    }
 	    
 	    @Override
+	    public int compare(WritableComparable w1, WritableComparable w2) {
+	    	TextPair a = (TextPair) w1;
+	    	TextPair b = (TextPair) w2;
+	    	return a.getFirst().compareTo(b.getFirst());
+	    }
+	    
+	    /*@Override
 	    public int compare(WritableComparable a, WritableComparable b) {
 	      if (a instanceof TextPair && b instanceof TextPair) {
 	    	  TextPair A = (TextPair) a; TextPair B = (TextPair) b;
@@ -144,7 +138,8 @@ public class RelativeFrequencyPairs {
 	        //return ((TextPair) a).first.compareTo(((TextPair) b).first);
 	      }
 	      return super.compare(a, b);
-	    }
+	    }*/
+	    
 	  }
 	
 public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
@@ -154,12 +149,12 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	public int getPartition(TextPair key, IntWritable value, int numReduceTasks) {
 		TextPair arg0 = key;
 		Text sec = new Text(key.getFirst().toString());
-		if(key.getSecond().charAt(0)== SPECIAL) {
+		/*if(key.getSecond().charAt(0)== SPECIAL) {
 			
 			//System.out.println("*Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " " + sec.hashCode());
 			
 			return (arg0.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
-		}
+		}*/
 		//System.out.println("Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " "+ sec.hashCode());
 		return (sec.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
 	}
@@ -209,17 +204,18 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
     //job.setGroupingComparatorClass(cls)
      // job.setSortComparatorClass(TextPairComparator.class);
      //output of reducers
-   // job.setSortComparatorClass(TextPairComparator.class);
+  //  job.setSortComparatorClass(TextPairComparator.class);
+    //job.setSortComparatorClass(TextPairComparator.class);
     job.setOutputKeyClass(TextPair.class);
     job.setOutputValueClass(FloatWritable.class);
     job.setPartitionerClass(LeftWordPartitioner.class);
     
-    
+    job.setNumReduceTasks(4);
+
     job.setMapperClass(Map.class);
     job.setReducerClass(Reduce.class);
     job.setInputFormatClass(ParagraphInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
-        
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJarByClass(RelativeFrequencyPairs.class);
@@ -303,6 +299,7 @@ class TextPair implements WritableComparable<TextPair> {
 	    if (cmp != 0) {
 	      return cmp;
 	    }
+	    
 	    return second.compareTo(tp.second);
 	  }
 	}

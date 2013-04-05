@@ -1,10 +1,14 @@
 package org;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
 
@@ -15,7 +19,7 @@ import javax.swing.JOptionPane;
  */
 public class FileCleaner {
 	
-	
+	private static HashMap<String, Integer> STOPWORDS = new HashMap<String, Integer>();
 	public static void main(String[] args) {
 		FileCleaner f = new FileCleaner();
 		try {
@@ -36,6 +40,7 @@ public class FileCleaner {
 		JOptionPane.showMessageDialog(null, "Processing Complete!");
 	}
 	private void startCleaning(String fileName) throws IOException {
+		this.getStopWords();
 		//String fileName = JOptionPane.showInputDialog("Enter file name to clean");
 		BufferedReader sc = new BufferedReader(new FileReader(fileName));
 		FileWriter fs=  new FileWriter(fileName+"clean.txt");
@@ -43,6 +48,7 @@ public class FileCleaner {
 		
 		String line;
 		String line2;
+		String line3;
 		int linenum=0;
 		while(true) {
 			//System.out.println("Line:" + linenum);
@@ -59,7 +65,10 @@ public class FileCleaner {
 						line2+=c;
 					}
 				}
-				out.write(line2+'\n');
+				//non alphanumeric/whitespace characters removed, now remove stop words:
+				
+				line3=this.removeStopWords(line2);
+				out.write(line3+'\n');
 			}
 			else {
 			//	System.out.println("Found invalid line" + line);
@@ -91,7 +100,63 @@ public class FileCleaner {
 		return false;
 	}
 	
+	private String removeStopWords(String line) {
+		String ret="";
+		char c;
+		String word="";
+		for(int i =0;i<line.length();i++) {
+			c=line.charAt(i);
+			if(this.isWhiteSpaceOrNumberic(c)) {
+				//JOptionPane.showMessageDialog(null, word);	
+				if(word.length() > 0 && STOPWORDS.get(word) == null) {
+					ret+=word;
+					ret+=c;
+				}
+				word="";
+				//ret+=c;
+			} else {
+				word+=c;
+			}
+		}
+		
+		return ret;
+	}
+	
+	public void getStopWords() {
+		  STOPWORDS=new HashMap<String,Integer>();
+		  BufferedReader sc = null;
+		//sc = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/config/stopwords.txt")));
+		try {
+			sc = new BufferedReader(new FileReader("config/stopwords.txt"));
+		} catch (FileNotFoundException e1) {
+			JOptionPane.showMessageDialog(null, "Cannot find stopwords.txt");
+			e1.printStackTrace();
+		}
+
+		  String line="";
+		  String[] words;
+		  while(true) {
+			  //System.out.println("Line:" + linenum);
+			  try {
+				  line=sc.readLine();
+			  } catch (IOException e) {
+				  e.printStackTrace();
+			  }
+			  if(line == null) {
+				  break;
+			  } 
+			  words = line.split(",");
+			  for(int i =0;i<words.length;i++) {
+				  System.out.println("Adding stop word:" + words[i]);
+				  STOPWORDS.put(words[i],0);
+			  }
+		  }
+	  }
 	private boolean isAlphaNumericOrWhiteSpace(char c) {
 		return (c>='a' && c<='z') || (c>='0' && c<='9') || (c==' '|| c== '\n' || c=='\t');
+	}
+	
+	private boolean isWhiteSpaceOrNumberic(char c) {
+		return (c==' ' || c=='\n' || c=='\t') || (c>='0' && c<='9');
 	}
 }
