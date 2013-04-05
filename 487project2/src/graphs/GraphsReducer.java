@@ -12,9 +12,10 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 /*for node: 
 [0] - nodeId
 [1] - distance from start node
-[3] - node's adjacency list (TODO: formatted as...)
+[2] - node's adjacency list in format 1:2:3
+[3] - N if node not visited; Y if already visited
 */
-/**
+/**Reducer class for Shortest Path Problem
  * 
  * @author Alyssa
  * @param nodeId - the id of the current node
@@ -22,9 +23,11 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
  * @return -<key,value> pair of <nodeId, node metadata> 
  */
 public class GraphsReducer extends Reducer<LongWritable, Iterable<ArrayWritable>, LongWritable, ArrayWritable> {
+	public static final long INFINITY = 1000000;//TODO: need to determine an appropriate value for infinity
+
 	 public void reduce(LongWritable nodeId, Iterable<ArrayWritable> values, Context context) 
 		      throws IOException, InterruptedException {
-		 Long dmin = new Long(1000000); //TODO: need to determine an appropriate value for infinity
+		 Long dmin = new Long(INFINITY); 
 		 String[] node = null;
 		 for(ArrayWritable array:values){
 			 String[] represents = array.toStrings();
