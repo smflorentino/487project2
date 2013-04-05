@@ -137,7 +137,7 @@ public class CooccuranceStripes {
 					//System.out.println("Item Found for the First Time - word: " + t.toString());
 					Hf.put(t, new IntWritable(current));
 				}
-				//System.out.println("Done with that word. HashMap: " + Hf.toString());
+				//System.out.println("Done with that word. HashMap: " + Hf.tString());
 			}
 		}
 	}

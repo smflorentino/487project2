@@ -44,9 +44,4 @@ public class TimeTracker {
 		}
 	}
 	
-	/*public static void main(String[] args) {
-		TimeTracker tt = new TimeTracker();
-		tt.writeStartTime();
-		tt.writeEndTime();
-	}*/
 }

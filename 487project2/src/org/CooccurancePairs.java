@@ -31,7 +31,7 @@ public class CooccurancePairs {
     private String w;
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	String n="";
-    	//System.out.println(value.toString());
+    	//System.out.println(value.toString));
         String line = value.toString();
         String neighbors = value.toString();
         StringTokenizer tokenizer = new StringTokenizer(line);

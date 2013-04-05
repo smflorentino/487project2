@@ -20,7 +20,6 @@ public class FileDuplicator {
 		File[] list = folder.listFiles();
 		
 		for(int i=0;i<list.length;i++) {
-			//System.out.println(list[i].getName());
 			String fileName=list[i].getName();
 			
 			for(int j=0;j<2;j++) { //make two copies

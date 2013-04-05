@@ -71,7 +71,7 @@ public class FileCleaner {
 				out.write(line3+'\n');
 			}
 			else {
-			//	System.out.println("Found invalid line" + line);
+			//	System.out.println("Found invalid line" + line)
 			}
 			linenum++;
 		}

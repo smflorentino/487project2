@@ -188,8 +188,7 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
             //_marginal =0;
            _sum=0;
         }
-        //System.out.println("Marginal: " + _marginal + " Sum: " + _sum);
-        //System.out.println("\n\n------------------------------End Reducer-----------------------------");
+
     }
  }
         
