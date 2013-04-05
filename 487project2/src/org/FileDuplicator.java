@@ -24,7 +24,6 @@ public class FileDuplicator {
 			String fileName=list[i].getName();
 			
 			for(int j=0;j<2;j++) { //make two copies
-				//Files.copy(fileName,fileName+j,true);
 				Files.copy(list[i].toPath(), FileSystems.getDefault().getPath(list[i].getName() + j + ""), StandardCopyOption.REPLACE_EXISTING);
 			}
 			

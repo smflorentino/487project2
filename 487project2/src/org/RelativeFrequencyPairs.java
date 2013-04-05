@@ -137,7 +137,7 @@ public class RelativeFrequencyPairs {
 	    	  
 	        //return ((TextPair) a).first.compareTo(((TextPair) b).first);
 	      }
-	      return super.compare(a, b);
+	      return super.compare(a, b)
 	    }*/
 	    
 	  }
