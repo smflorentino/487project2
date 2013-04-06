@@ -24,7 +24,6 @@ public class GraphsDriver  {
 		};
 	
 	public static void main(String args[]) throws Exception {
-		//TODO: how to pass input to mapper as 
 		//TODO: determine the number of nodes in graph by parsing file
 		long numNodes=0;
 //		do{
@@ -50,6 +49,8 @@ public class GraphsDriver  {
 		     
 		     job.setJarByClass(GraphsDriver.class);
 		     job.waitForCompletion(true);
+		     //set # reducers to number of nodes
+		     
 		     
 		     Counters counters = job.getCounters();
 		     Counter c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
@@ -67,6 +68,8 @@ public class GraphsDriver  {
 	//TODO: figure out how to use "counter"
 	
 //if not done, repeat. 
-	
+	public void parseInputFile(String inputFileName){
+		
+	}
 	
 }
