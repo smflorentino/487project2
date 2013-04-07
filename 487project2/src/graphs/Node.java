@@ -6,13 +6,11 @@ public class Node {
 	private Long id;
 	private Long distance;
 	private List<Long> neighbors;
-	private boolean isVisited;
 	
-	public Node(Long id, Long distance, List<Long> neighbors, boolean isVisited){
+	public Node(Long id, Long distance, List<Long> neighbors){
 		this.id = id;
 		this.distance = distance;
 		this.neighbors = neighbors;
-		this.isVisited = isVisited;
 	}
 	
 	public Long getId(){
@@ -31,17 +29,9 @@ public class Node {
 		return this.neighbors;
 	}
 	
-	public boolean getIsVisited(){
-		return this.isVisited;
-	}
-	
-	public void setIsVisited(boolean isVisited){
-		this.isVisited = isVisited;
-	}
-	
 	@Override
 	public String toString(){
-		return this.id.toString() + "\t" + this.distance.toString() + "\t" + this.neighbors.toString() +"\t" + isVisited;
+		return this.id.toString() + "\t" + this.distance.toString() + "\t" + this.neighbors.toString();
 	}
 
 }

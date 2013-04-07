@@ -30,9 +30,7 @@ public class GraphsDriver  {
 			 Configuration conf = new Configuration();
 		     
 		     Job job = new Job(conf, "Graphs");
-		     
-		     
-		     
+		     		     
 		     job.setOutputKeyClass(LongWritable.class);
 		     job.setOutputValueClass(ArrayWritable.class);
 		         
@@ -54,13 +52,11 @@ public class GraphsDriver  {
 		     
 		     Counters counters = job.getCounters();
 		     Counter c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
+		     System.out.println("Counter value at end: "+c1.getValue());
 	//	}while(c1.getValue()<numNodes);
     	 
      
 	}
-//TODO: create initial ?list of array of strings? representing the entire graphs (1 array = 1 node)
-//TODO: initially set all distances to "infinity", except for the start node itself (set to 0)
-	// TODO: is infinity = 1000000 appropriate?
 	
 //submit MapReduce job
 
