@@ -453,7 +453,7 @@ class ParagraphReader {
 
 
 
-/**
+/**ee
  * Treats keys as offset in file and value as line. 
  */
 class ParagraphRecordReader extends RecordReader<LongWritable, Text> {
