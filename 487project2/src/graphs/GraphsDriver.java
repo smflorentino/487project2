@@ -24,16 +24,13 @@ public class GraphsDriver  {
 		};
 	
 	public static void main(String args[]) throws Exception {
-		//TODO: how to pass input to mapper as 
 		//TODO: determine the number of nodes in graph by parsing file
 		long numNodes=0;
 //		do{
 			 Configuration conf = new Configuration();
 		     
 		     Job job = new Job(conf, "Graphs");
-		     
-		     
-		     
+		     		     
 		     job.setOutputKeyClass(LongWritable.class);
 		     job.setOutputValueClass(ArrayWritable.class);
 		         
@@ -50,16 +47,16 @@ public class GraphsDriver  {
 		     
 		     job.setJarByClass(GraphsDriver.class);
 		     job.waitForCompletion(true);
+		     //set # reducers to number of nodes
+		     
 		     
 		     Counters counters = job.getCounters();
 		     Counter c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
+		     System.out.println("Counter value at end: "+c1.getValue());
 	//	}while(c1.getValue()<numNodes);
     	 
      
 	}
-//TODO: create initial ?list of array of strings? representing the entire graphs (1 array = 1 node)
-//TODO: initially set all distances to "infinity", except for the start node itself (set to 0)
-	// TODO: is infinity = 1000000 appropriate?
 	
 //submit MapReduce job
 
@@ -67,6 +64,8 @@ public class GraphsDriver  {
 	//TODO: figure out how to use "counter"
 	
 //if not done, repeat. 
-	
+	public void parseInputFile(String inputFileName){
+		
+	}
 	
 }

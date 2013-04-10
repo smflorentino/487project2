@@ -41,7 +41,7 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
     	Node node = this.getNode(nodeArray);
     	LongWritable distance = new LongWritable(node.getDistance());
     	//emit the current node and mark as visited
-    	nodeArray[3] = "Y"; //TODO: only keep if counters don't work
+//    	nodeArray[3] = "Y"; //TODO: only keep if counters don't work
     	nodeAW = new ArrayWritable(nodeArray);
     	context.write(nodeId, nodeAW);
     	Long newDistance = distance.get() + 1;
@@ -84,11 +84,7 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
     	long id = (long) Integer.parseInt(nodeArray[0]);
     	long distance = (long) Integer.parseInt(nodeArray[1]);
     	List<Long> neighbors = this.getAdjacencyList(nodeArray[2]);
-    	boolean isVisited = false;
-    	if(nodeArray[3].equals("Y")){
-    		isVisited = true;
-    	}
-    	return new Node(id,distance,neighbors,isVisited);
+    	return new Node(id,distance,neighbors);
     }
 
 }
