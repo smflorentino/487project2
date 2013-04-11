@@ -8,7 +8,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * @author scottflo
+ * 
  * A class to store the output keys of the mappers/reducers
  * Adapted from: http://my.safaribooksonline.com/book/databases/hadoop/9780596521974/serialization/id3548156
  */
