@@ -37,8 +37,8 @@ public class GraphsDriver  {
 		     job.setMapperClass(GraphsMapper.class);
 		     job.setReducerClass(GraphsReducer.class);
 
-		     FileInputFormat.addInputPath(job, new Path("graphsData/testInput.txt"));
-		     FileOutputFormat.setOutputPath(job, new Path("graphsData/testOutput.txt"));
+		     FileInputFormat.addInputPath(job, new Path("inputGraph.txt"));
+		     FileOutputFormat.setOutputPath(job, new Path("graphsData/output.txt"));
 
 		     
 //		     TODO: return to args after testing
