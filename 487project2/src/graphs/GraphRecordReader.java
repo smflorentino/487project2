@@ -137,7 +137,7 @@ class GraphRecordReader extends RecordReader<LongWritable, ArrayWritable> {
     }
   }
   /**Get the nodeId from the line
-   * 
+   * @author Alyssa
    * @param cl - the current line
    * @return the id of the node represented by this line
    */

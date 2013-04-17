@@ -22,24 +22,34 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
  * @param node - either node metadata or a node's distance from the start node
  * @return -<key,value> pair of <nodeId, node metadata> 
  */
-public class GraphsReducer extends Reducer<LongWritable, Iterable<ArrayWritable>, LongWritable, ArrayWritable> {
+//public class GraphsReducer extends Reducer<LongWritable, Iterable<ArrayWritable>, LongWritable, ArrayWritable> {
+public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Text> {
 	public static final long INFINITY = 1000000;//TODO: need to determine an appropriate value for infinity
 
-	 public void reduce(LongWritable nodeId, Iterable<ArrayWritable> values, Context context) 
+//	 public void reduce(LongWritable nodeId, Iterable<ArrayWritable> values, Context context) 
+//		      throws IOException, InterruptedException {
+	public void reduce(LongWritable nodeId, Iterable<Text> values, Context context) 
 		      throws IOException, InterruptedException {
 		 Long dmin = new Long(INFINITY); 
 		 String[] node = null;
-		 for(ArrayWritable array:values){
-			 String[] represents = array.toStrings();
+//		 for(ArrayWritable array:values){
+		 for(Text nodeAsText:values){
+			 String s = nodeAsText.toString();
+			  String[] represents = s.split("\t");
+//			 String[] represents = array.toStrings();
 			 int d = Character.getNumericValue(represents[1].charAt(0));
-			 if(this.isNode(array)){
-				 node = array.toStrings();
+//			 if(this.isNode(array)){
+			 if(this.isNode(represents)){
+//				 node = array.toStrings();
+				 node = represents;
 			 }else if(d<dmin){
 				 dmin = new Long(d);
 			 }
 			 node[1]= dmin.toString(); //change the node's distance to dmin
 			 ArrayWritable nodeArray = new ArrayWritable(node);
-			 context.write(nodeId, nodeArray);
+//			 context.write(nodeId, nodeArray);
+			 context.write(nodeId, nodeAsText);
+
 		 }
 		 
 	 }
@@ -53,6 +63,13 @@ public class GraphsReducer extends Reducer<LongWritable, Iterable<ArrayWritable>
  */
 	private boolean isNode(ArrayWritable array) {
 		if(array.toStrings().length>1){
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean isNode(String[] array){
+		if(array.length>1){
 			return true;
 		}
 		return false;

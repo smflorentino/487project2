@@ -11,10 +11,10 @@ import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
+import graphs.GraphRecordReader;
 
-
-public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritable, ArrayWritable> {
-	
+//public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritable, ArrayWritable> {
+public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text> {
 	public static enum GRAPHS_COUNTER {
 		  INCOMING_GRAPHS,
 		  PRUNING_BY_NCV,
@@ -36,20 +36,26 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
 	 * @param node - the metadata about the current node
 	 * @return -<key,value> pair of either <nodeId, node metadata> or <neighbor's nodeId, a distance to neighbor from start>
 	 */
-    public void map(LongWritable nodeId, ArrayWritable nodeAW, Context context) throws IOException, InterruptedException {
-    	String[] nodeArray = nodeAW.toStrings();
-    	Node node = this.getNode(nodeArray);
-    	LongWritable distance = new LongWritable(node.getDistance());
+//    public void map(LongWritable nodeId, ArrayWritable nodeAW, Context context) throws IOException, InterruptedException {
+	    public void map(LongWritable nodeId, Text nodeAsText, Context context) throws IOException, InterruptedException {
+			 String s = nodeAsText.toString();
+			 String[] represents = s.split("\t");
+//    	String[] nodeArray = nodeAW.toStrings();
+//    	Node node = this.getNode(nodeArray);
+//    	LongWritable distance = new LongWritable(node.getDistance());
+			 LongWritable distance = new LongWritable(Long.parseLong(represents[1]));
     	//emit the current node and mark as visited
 //    	nodeArray[3] = "Y"; //TODO: only keep if counters don't work
-    	nodeAW = new ArrayWritable(nodeArray);
-    	context.write(nodeId, nodeAW);
+//    	nodeAW = new ArrayWritable(nodeArray);
+//    	context.write(nodeId, nodeAW);
+		context.write(nodeId, nodeAsText);
     	Long newDistance = distance.get() + 1;
 		String[] d = {newDistance.toString()};
-    	for(Long neighborNodeId: node.getNeighbors()){
+//    	for(Long neighborNodeId: node.getNeighbors()){
+    	for(Long neighborNodeId: this.getNeighbors(represents[2])){
     		LongWritable lw_neighborNodeId = new LongWritable(neighborNodeId);
     		//emit <neighborNodeId, newDistance>
-    		context.write(lw_neighborNodeId, new ArrayWritable(d));
+    		context.write(lw_neighborNodeId, new Text(newDistance.toString()));
     	}
     	//consider the node that was passed in as visited, so increment the counter    	
     	context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
@@ -87,4 +93,14 @@ public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritab
     	return new Node(id,distance,neighbors);
     }
 
+    public List<Long> getNeighbors(String listAsString){
+    	ArrayList<Long> list = new ArrayList<Long>();
+    	String[] represents = listAsString.split(":");
+    	for(int i=0; i<represents.length; i++){
+    		String s = represents[i];
+    		s = s.trim();
+    		list.add(Long.parseLong(s));
+    	}
+    	return list;
+    }
 }

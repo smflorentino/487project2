@@ -32,12 +32,13 @@ public class GraphsDriver  {
 		     Job job = new Job(conf, "Graphs");
 		     		     
 		     job.setOutputKeyClass(LongWritable.class);
-		     job.setOutputValueClass(ArrayWritable.class);
+//		     job.setOutputValueClass(ArrayWritable.class);
+		     job.setOutputValueClass(Text.class);
 		         
 		     job.setMapperClass(GraphsMapper.class);
 		     job.setReducerClass(GraphsReducer.class);
 
-		     FileInputFormat.addInputPath(job, new Path("inputGraph.txt"));
+		     FileInputFormat.addInputPath(job, new Path("/inputGraph.txt"));
 		     FileOutputFormat.setOutputPath(job, new Path("graphsData/output.txt"));
 
 		     
@@ -47,6 +48,7 @@ public class GraphsDriver  {
 		     
 		     job.setJarByClass(GraphsDriver.class);
 		     job.waitForCompletion(true);
+
 		     //set # reducers to number of nodes
 		     
 		     
