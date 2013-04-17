@@ -31,28 +31,38 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 	public void reduce(LongWritable nodeId, Iterable<Text> values, Context context) 
 		      throws IOException, InterruptedException {
 		 Long dmin = new Long(INFINITY); 
-		 String[] node = null;
+		 String node = "";
 //		 for(ArrayWritable array:values){
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
 //			  String[] represents = s.split(" ");
-			 String[] represents = this.myParser(s);
-
+//			 String[] represents = this.myParser(s);
+			 
 //			 String[] represents = array.toStrings();
-			 int d = Character.getNumericValue(represents[1].charAt(0));
 //			 if(this.isNode(array)){
-			 if(this.isNode(represents)){
+			 if(this.isNode(s)){
 //				 node = array.toStrings();
-				 node = represents;
-			 }else if(d<dmin){
-				 dmin = new Long(d);
+				 node = s;
+			 }else{
+				 Long d = Long.parseLong(s);
+				 if(d<dmin){
+			 		 dmin = new Long(d);
+				 }
 			 }
-			 node[1]= dmin.toString(); //change the node's distance to dmin
-			 ArrayWritable nodeArray = new ArrayWritable(node);
-//			 context.write(nodeId, nodeArray);
-			 context.write(nodeId, nodeAsText);
-
 		 }
+			 String[] represents = this.myParser(node);
+			 represents[1]=dmin.toString();
+			 String newNode="";
+			 for(int i=0; i<represents.length;i++){
+				newNode=newNode+" "+represents[i]; 
+			 }
+			 newNode=newNode.trim();
+//			 node[1]= dmin.toString(); //change the node's distance to dmin
+//			 ArrayWritable nodeArray = new ArrayWritable(node);
+//			 context.write(nodeId, nodeArray);
+			 context.write(nodeId, new Text(newNode));
+
+		 
 		 
 	 }
 	 
@@ -70,19 +80,19 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 		return false;
 	}
 	
-	private boolean isNode(String[] array){
-		if(array.length>1){
+	private boolean isNode(String s){
+		if(s.contains(" ")){
 			return true;
 		}
 		return false;
 	}
     String[] myParser(String s){
-    	String[] array = new String[4];
+    	String[] array = new String[3];
     	String entry = "";
     	int index = 0;
     	for(int i = 0; i<s.length(); i++){
     		if(s.charAt(i)==' '){
-    			if(index<4){
+    			if(index<3){
     				array[index]=entry;
     				entry="";
     				index++;

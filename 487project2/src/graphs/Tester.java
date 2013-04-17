@@ -16,6 +16,7 @@ public class Tester {
 	
 	String testString = "32 125 23:24:25:31:40:41:46:";
 	String[] represents = m.myParser(testString);
+	System.out.println(represents);
 	for(int i=0; i<represents.length;i++){
 		System.out.println(represents[i]);
 	}

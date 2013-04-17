@@ -105,12 +105,12 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     }
     
     String[] myParser(String s){
-    	String[] array = new String[4];
+    	String[] array = new String[3];
     	String entry = "";
     	int index = 0;
     	for(int i = 0; i<s.length(); i++){
     		if(s.charAt(i)==' '){
-    			if(index<4){
+    			if(index<3){
     				array[index]=entry;
     				entry="";
     				index++;
