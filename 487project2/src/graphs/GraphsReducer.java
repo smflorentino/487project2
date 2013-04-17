@@ -35,7 +35,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 //		 for(ArrayWritable array:values){
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
-			  String[] represents = s.split("\t");
+			  String[] represents = s.split(" ");
 //			 String[] represents = array.toStrings();
 			 int d = Character.getNumericValue(represents[1].charAt(0));
 //			 if(this.isNode(array)){

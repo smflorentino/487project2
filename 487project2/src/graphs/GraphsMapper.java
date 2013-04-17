@@ -109,7 +109,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     	String entry = "";
     	int index = 0;
     	for(int i = 0; i<s.length(); i++){
-    		if(s.charAt(i)=='\t'){
+    		if(s.charAt(i)==' '){
     			if(index<4){
     				array[index]=entry;
     			}
