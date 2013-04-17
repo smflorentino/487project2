@@ -35,7 +35,9 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 //		 for(ArrayWritable array:values){
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
-			  String[] represents = s.split(" ");
+//			  String[] represents = s.split(" ");
+			 String[] represents = this.myParser(s);
+
 //			 String[] represents = array.toStrings();
 			 int d = Character.getNumericValue(represents[1].charAt(0));
 //			 if(this.isNode(array)){
@@ -74,4 +76,24 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 		}
 		return false;
 	}
+    String[] myParser(String s){
+    	String[] array = new String[4];
+    	String entry = "";
+    	int index = 0;
+    	for(int i = 0; i<s.length(); i++){
+    		if(s.charAt(i)==' '){
+    			if(index<4){
+    				array[index]=entry;
+    				entry="";
+    				index++;
+    			}
+    		}else{
+    			entry = entry + s.charAt(i);
+    		}
+    	}
+		if(entry.length()>0 && index<4){
+			array[index]=entry;
+		}
+    	return array;
+    }
 }
