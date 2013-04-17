@@ -39,7 +39,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 //    public void map(LongWritable nodeId, ArrayWritable nodeAW, Context context) throws IOException, InterruptedException {
 	    public void map(LongWritable nodeId, Text nodeAsText, Context context) throws IOException, InterruptedException {
 			 String s = nodeAsText.toString();
-			 String[] represents = s.split("\t");
+			 String[] represents = this.myParser(s);
 //    	String[] nodeArray = nodeAW.toStrings();
 //    	Node node = this.getNode(nodeArray);
 //    	LongWritable distance = new LongWritable(node.getDistance());
@@ -102,5 +102,21 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     		list.add(Long.parseLong(s));
     	}
     	return list;
+    }
+    
+    String[] myParser(String s){
+    	String[] array = new String[4];
+    	String entry = "";
+    	int index = 0;
+    	for(int i = 0; i<s.length(); i++){
+    		if(s.charAt(i)=='\t'){
+    			if(index<4){
+    				array[index]=entry;
+    			}
+    		}else{
+    			entry = entry + s.charAt(i);
+    		}
+    	}
+    	return array;
     }
 }
