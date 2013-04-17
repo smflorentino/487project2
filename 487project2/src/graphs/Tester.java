@@ -10,9 +10,13 @@ public class Tester {
 	GraphsMapper m = new GraphsMapper();
 	String[] s = {"1","1000000","2:3","Y"};
 	Node node = m.getNode(s);
-	System.out.println(node);
+//	System.out.println(node);
 	
-	//TODO: Test Input File (w/ tab delimiter) -> Array of Strings Parser
+	String testString = "1 0 2:";
+	String[] result = m.myParser(testString);
+	for(int i=0; i<result.length;i++){
+		System.out.println(result[i]);
+	}
 
 	
 	}

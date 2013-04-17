@@ -112,11 +112,16 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     		if(s.charAt(i)==' '){
     			if(index<4){
     				array[index]=entry;
+    				entry="";
+    				index++;
     			}
     		}else{
     			entry = entry + s.charAt(i);
     		}
     	}
+		if(entry.length()>0 && index<4){
+			array[index]=entry;
+		}
     	return array;
     }
 }
