@@ -151,7 +151,7 @@ public class CooccuranceStripes {
 		job.setReducerClass(Reduce1.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(HashMapWritable.class);
-
+		
 		
 
 		job.setPartitionerClass(TextPartitioner.class);

@@ -7,6 +7,7 @@ import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -33,6 +34,8 @@ public class KMeans1D {
  public static class Map extends Mapper<LongWritable, Text, VectorWritable, VectorWritable> {
 
 	 private static ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
+	 private static BooleanWritable _changeMade = new BooleanWritable(false);
+	 private static BooleanWritable _incremented = new BooleanWritable(false);
 	 
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	String current = value.toString();
@@ -42,9 +45,10 @@ public class KMeans1D {
     		//start of a new job
     	}
     	if(current.startsWith("c")) {
-    		VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
-    		_centers.add(center);
-    		context.write(center,center);
+    		_centers.add(VectorWritable.parseVector(current));
+    		//VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
+    		//_centers.add(center);
+    		//context.write(center,center);
     	}
     	else {
     		currentVal = Integer.parseInt(value.toString());
@@ -68,12 +72,22 @@ public class KMeans1D {
 
     }
     
+    @Override
+    public void cleanup(Context context) {
+    	
+    	//increment once and only once for the job, if a cluster assignment changed
+    	if(!_incremented.get() && _changeMade.get()) {
+    		context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
+    		_incremented.set(true);
+    	}
+    }
+    
    
  } 
  
 
  public static class Reduce extends Reducer<VectorWritable, VectorWritable, VectorWritable, VectorWritable> {
-
+	
     public void reduce(VectorWritable key, Iterable<VectorWritable> values, Context context) 
       throws IOException, InterruptedException {
         int sum = 0;
@@ -102,47 +116,10 @@ public class KMeans1D {
         	context.write(p, center);
         }
     }
+    
+    
  }
- public static class JobSetupComitter extends OutputCommitter {
 
-	@Override
-	public void abortTask(TaskAttemptContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void cleanupJob(JobContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void commitTask(TaskAttemptContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public boolean needsTaskCommit(TaskAttemptContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void setupJob(JobContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setupTask(TaskAttemptContext arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-
- }
  public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();   
         Job job = new Job(conf, "wordcount");
