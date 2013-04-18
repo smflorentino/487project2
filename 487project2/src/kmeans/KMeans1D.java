@@ -5,27 +5,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
-import org.TimeTracker;
-import org.CooccurancePairs.LeftWordPartitioner;
-import org.CooccurancePairs.Map;
-import org.CooccurancePairs.Reduce;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class KMeans1D {
-        
+       
 	public static enum KMEANS_COUNTER {
 		NUMBER_OF_CHANGES
 	};
@@ -39,26 +38,33 @@ public class KMeans1D {
     	String current = value.toString();
     	VectorWritable currentCenter=null;
     	int currentVal=0;
+    	if(key.get() ==0 ) {
+    		//start of a new job
+    	}
     	if(current.startsWith("c")) {
     		VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
     		_centers.add(center);
-    		context.write(center, null);
+    		context.write(center,center);
     	}
     	else {
-    		currentVal = Integer.parseInt(value.toString().substring(1));
+    		currentVal = Integer.parseInt(value.toString());
     		int lowestDistance;
-    		currentCenter = _centers.get(0);
+    		currentCenter = _centers.get(0); //get the first centroid
     		lowestDistance = Math.abs(currentVal-currentCenter.get());
     		int temp;
-    		for(VectorWritable i : _centers) {
-    			temp = Math.abs(currentVal-i.get());
+    		VectorWritable I;
+    		for(int i=1;i<_centers.size();i++) { //resume at second centroid
+    			I=_centers.get(i);
+    			temp = Math.abs(currentVal-I.get());
     			if(temp < lowestDistance) {
     				lowestDistance = temp;
-    				currentCenter = i;
+    				currentCenter = I;
     			}
     		}
+    		VectorWritable point = new VectorWritable(currentVal);
+        	context.write(currentCenter,point);
     	}
-    	context.write(currentCenter,new VectorWritable(currentVal));
+    	
 
     }
     
@@ -74,47 +80,93 @@ public class KMeans1D {
         VectorWritable center;
         ArrayList<VectorWritable> points = new ArrayList<VectorWritable>();
         int numOfPoints=0;
+        System.out.println("Starting Reduce Task...");
         for (VectorWritable val : values) {
-            if(val == null) {
+        	System.out.println("Current Key " +key.toString() + " Current Value" + val.toString());
+            if(val.isCentroid()) {
+            	System.out.println("Centroid Found!");
             	center = new VectorWritable(key.get(),true);
             }
             else {
             	sum+=val.get();
             	numOfPoints++;
-            	points.add(val);
+            	points.add(new VectorWritable(val.get()));
             }
         }
         //calculate the new centroid
-        center = new VectorWritable(sum/numOfPoints);
-        context.write(center,null);
+        center = new VectorWritable(sum/numOfPoints,true);
+        context.write(center,center);
         //add all other points back to the file
         for(VectorWritable p : points) {
+        	System.out.println("Current Point " + p.toString());
         	context.write(p, center);
         }
     }
  }
-        
+ public static class JobSetupComitter extends OutputCommitter {
+
+	@Override
+	public void abortTask(TaskAttemptContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void cleanupJob(JobContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void commitTask(TaskAttemptContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean needsTaskCommit(TaskAttemptContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setupJob(JobContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setupTask(TaskAttemptContext arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+ }
  public static void main(String[] args) throws Exception {
-    Configuration conf = new Configuration();
-        
+    Configuration conf = new Configuration();   
         Job job = new Job(conf, "wordcount");
     
-    job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputKeyClass(VectorWritable.class);
+    job.setOutputValueClass(VectorWritable.class);
         
     job.setMapperClass(Map.class);
     job.setReducerClass(Reduce.class);
-    job.setPartitionerClass(LeftWordPartitioner.class);
     job.setInputFormatClass(TextInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
-        
+ 
+    //NEED TO FIGURE OUT COMMITTERS
+    
     FileInputFormat.addInputPath(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJarByClass(KMeans1D.class);
-    TimeTracker tt = new TimeTracker();
-    tt.writeStartTime();
+   // TimeTracker tt = new TimeTracker();
+   // tt.writeStartTime();
+   // job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
+    
     job.waitForCompletion(true);
-    tt.writeEndTime();
+    System.out.println(job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).toString());
+   // tt.writeEndTime();
  }
         
 }
