@@ -31,16 +31,18 @@ public class KMeans1D {
 	};
 	
 
- public static class Map extends Mapper<LongWritable, Text, IntWritable, IntWritable> {
+ public static class Map extends Mapper<LongWritable, Text, VectorWritable, VectorWritable> {
 
-	 private static ArrayList<IntWritable> _centers = new ArrayList<IntWritable>();
+	 private static ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
 	 
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	String current = value.toString();
-    	IntWritable currentCenter=null;
+    	VectorWritable currentCenter=null;
     	int currentVal=0;
     	if(current.startsWith("c")) {
-    		_centers.add(new IntWritable(Integer.parseInt(current.substring(1))));
+    		VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
+    		_centers.add(center);
+    		context.write(center, null);
     	}
     	else {
     		currentVal = Integer.parseInt(value.toString().substring(1));
@@ -48,7 +50,7 @@ public class KMeans1D {
     		currentCenter = _centers.get(0);
     		lowestDistance = Math.abs(currentVal-currentCenter.get());
     		int temp;
-    		for(IntWritable i : _centers) {
+    		for(VectorWritable i : _centers) {
     			temp = Math.abs(currentVal-i.get());
     			if(temp < lowestDistance) {
     				lowestDistance = temp;
@@ -56,7 +58,7 @@ public class KMeans1D {
     			}
     		}
     	}
-    	context.write(new IntWritable(currentVal),currentCenter);
+    	context.write(currentCenter,new VectorWritable(currentVal));
 
     }
     
@@ -64,16 +66,31 @@ public class KMeans1D {
  } 
  
 
- public static class Reduce extends Reducer<TextPair, IntWritable, TextPair, IntWritable> {
+ public static class Reduce extends Reducer<VectorWritable, VectorWritable, VectorWritable, VectorWritable> {
 
-    public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
+    public void reduce(VectorWritable key, Iterable<VectorWritable> values, Context context) 
       throws IOException, InterruptedException {
         int sum = 0;
-        for (IntWritable val : values) {
-            sum += val.get();
+        VectorWritable center;
+        ArrayList<VectorWritable> points = new ArrayList<VectorWritable>();
+        int numOfPoints=0;
+        for (VectorWritable val : values) {
+            if(val == null) {
+            	center = new VectorWritable(key.get(),true);
+            }
+            else {
+            	sum+=val.get();
+            	numOfPoints++;
+            	points.add(val);
+            }
         }
-        //System.out.println("test");
-        context.write(key, new IntWritable(sum));
+        //calculate the new centroid
+        center = new VectorWritable(sum/numOfPoints);
+        context.write(center,null);
+        //add all other points back to the file
+        for(VectorWritable p : points) {
+        	context.write(p, center);
+        }
     }
  }
         
@@ -82,7 +99,7 @@ public class KMeans1D {
         
         Job job = new Job(conf, "wordcount");
     
-    job.setOutputKeyClass(TextPair.class);
+    job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);
         
     job.setMapperClass(Map.class);
