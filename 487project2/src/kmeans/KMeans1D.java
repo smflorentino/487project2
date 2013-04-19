@@ -86,11 +86,13 @@ public class KMeans1D {
     
     @Override
     public void cleanup(Context context) {
-    	
+    	System.out.println("Entering Cleanup");
     	//increment once and only once for the job, if a cluster assignment changed
-    	if(!_incremented.get() && _changeMade.get()) {
+    	if(_incremented.get() && !_changeMade.get()) {
+    		System.out.println("ATTEMPTING TO INCREMENT COUNTER");
     		context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
     		_incremented.set(true);
+    		_changeMade.set(true);
     	}
     }
     
@@ -110,6 +112,7 @@ public class KMeans1D {
         for (VectorWritable val : values) {
         	System.out.println("Current Key " +key.toString() + " Current Value" + val.toString());
             if(val.isCentroid()) {
+            	//this is no longer needed
             	System.out.println("Centroid Found!");
             	center = new VectorWritable(key.get(),true);
             }
@@ -154,7 +157,7 @@ public class KMeans1D {
    // job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
     
     job.waitForCompletion(true);
-    System.out.println(job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).toString());
+    System.out.println(job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue()+ "KMEANS COUNTER");
    // tt.writeEndTime();
  }
         
