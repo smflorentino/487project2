@@ -26,6 +26,8 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class KMeans1D {
        
+	
+	public static final int NUM_OF_CENTROIDS = 2;
 	public static enum KMEANS_COUNTER {
 		NUMBER_OF_CHANGES
 	};
@@ -37,7 +39,10 @@ public class KMeans1D {
 	 private static BooleanWritable _changeMade = new BooleanWritable(false);
 	 private static BooleanWritable _incremented = new BooleanWritable(false);
 	 
+	 private ArrayList<VectorWritable> _points;
+	 
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+    	_points = new ArrayList<VectorWritable>();
     	String current = value.toString();
     	VectorWritable currentCenter=null;
     	int currentVal=0;
@@ -51,7 +56,13 @@ public class KMeans1D {
     		//context.write(center,center);
     	}
     	else {
-    		currentVal = Integer.parseInt(value.toString());
+    		_points.add(VectorWritable.parseVector(current));
+    	}
+    	//we (hopefully) have all the centers, let's calculate
+    	//TODO: add global checking for multiple mappers and sleep accordingly
+    	
+    	for(VectorWritable point : _points) {
+    		currentVal = point.get();
     		int lowestDistance;
     		currentCenter = _centers.get(0); //get the first centroid
     		lowestDistance = Math.abs(currentVal-currentCenter.get());
@@ -61,13 +72,14 @@ public class KMeans1D {
     			I=_centers.get(i);
     			temp = Math.abs(currentVal-I.get());
     			if(temp < lowestDistance) {
+    				_incremented.set(true); //now we have to continue, since a cluster assignment changed
     				lowestDistance = temp;
     				currentCenter = I;
     			}
     		}
-    		VectorWritable point = new VectorWritable(currentVal);
+    	
         	context.write(currentCenter,point);
-    	}
+    	} 
     	
 
     }

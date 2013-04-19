@@ -3,6 +3,7 @@ package kmeans;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import kmeans.VectorWritable;
@@ -52,7 +53,7 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	public VectorWritable(int i, int c) {
 		_data = new IntWritable(i);
 		_center = new BooleanWritable(false);
-		_centroid = new IntWritable(c);
+		_centroid.set(c);
 	}
 	
 	@Override
@@ -117,7 +118,6 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	public static VectorWritable parseVector(String s) {
 		StringTokenizer st = new StringTokenizer(s);
 		String current=null;
-		VectorWritable ret = new VectorWritable();
 		while(st.hasMoreTokens()) {
 			current = st.nextToken();
 			if(current.startsWith("c")) {
@@ -126,7 +126,14 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 			}
 			else {
 				//we have ONE more token, the assigned centroid for that datapoint
+				try {
+					//all other iterations we have a cluster assigned
 				return new VectorWritable(Integer.parseInt(current), Integer.parseInt(st.nextToken())); 
+				}
+				catch (NoSuchElementException e) {
+					//this will happen for the FIRST iteration only, when no cluster is assigned
+					return new VectorWritable(Integer.parseInt(current));
+				}
 			}
 		}
 		//malformed input string, return null
