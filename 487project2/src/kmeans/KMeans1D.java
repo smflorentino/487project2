@@ -1,15 +1,10 @@
 package kmeans;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 //import java.nio.file.FileSystem;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -223,8 +218,12 @@ public class KMeans1D {
 //asd
  
  public static void main(String[] args) throws Exception {
-    Configuration conf = new Configuration();   
-        Job job = new Job(conf, "wordcount");
+	Path inputPath = new Path(args[0]);
+	Path outputPath = new Path(args[1]);
+	int counter = 0;
+	int internalCounter=0;
+	Configuration conf = new Configuration();   
+    Job job = new Job(conf, "wordcount");
     
     job.setOutputKeyClass(VectorWritable.class);
     job.setOutputValueClass(VectorWritable.class);
@@ -236,8 +235,8 @@ public class KMeans1D {
  
     //NEED TO FIGURE OUT COMMITTERS
     
-    FileInputFormat.addInputPath(job, new Path(args[0]));
-    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+    FileInputFormat.addInputPath(job, inputPath);
+    FileOutputFormat.setOutputPath(job, outputPath);
     job.setJarByClass(KMeans1D.class);
    // TimeTracker tt = new TimeTracker();
    // tt.writeStartTime();
@@ -245,11 +244,52 @@ public class KMeans1D {
     
     job.waitForCompletion(true);
     
-    FileSystem.get(conf).delete(new Path("/centers/centers.txt"),false);
-    
-    FileUtil.copyMerge(FileSystem.get(conf), new Path("/centersoutputs"), FileSystem.get(conf), new Path("/centers/centers.txt"), true, conf,"");
-    System.out.println(job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue()+ "KMEANS COUNTER");
-    // tt.writeEndTime();
- }
+    while(job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue() > counter) {
+
+    	
+    	internalCounter++;
+    	counter =0;
+    	System.out.println("****************************\nStarting Iteration + " + internalCounter + "\n********************************");
+    	//clean up from last job
+    	
+    	//delete the old input directory, and re-create it
+    	FileSystem.get(conf).delete(inputPath, true);
+    	FileSystem.get(conf).create(inputPath);
+    	
+    	//copy the output from the last MR job
+    	FileUtil.copy(FileSystem.get(conf), new Path(args[1] + "/part-r-00000"), FileSystem.get(conf), new Path(args[0]+ "/part-r-00000"), true, conf);
+    	
+  
+    	//delete the original centers file
+        FileSystem.get(conf).delete(new Path("/centers/centers.txt"),false);
+        
+        //merge all of the center files from each reducer, put it back into a new centers.txt file
+        //org.apache.hadoop.fs.FileUtil.copyMerge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, boolean deleteSource, Configuration conf, String addString);
+        FileUtil.copyMerge(FileSystem.get(conf), new Path("/centersoutputs"), FileSystem.get(conf), new Path("/centers/centers.txt"), true, conf,"");
+        
+        System.out.println(job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue()+ "KMEANS COUNTER");
+        
+        
+        //start the new job
+        conf = new Configuration();   
+        job = new Job(conf, "wordcount");
+        
+        job.setOutputKeyClass(VectorWritable.class);
+        job.setOutputValueClass(VectorWritable.class);
+            
+        job.setMapperClass(Map.class);
+        job.setReducerClass(Reduce.class);
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+     
+        //NEED TO FIGURE OUT COMMITTERS
+        
+        FileInputFormat.addInputPath(job, inputPath);
+        FileOutputFormat.setOutputPath(job, outputPath);
+        job.setJarByClass(KMeans1D.class);
+        
+        job.waitForCompletion(true);
+    }
+     }
         
 }
