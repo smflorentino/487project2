@@ -33,6 +33,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 		 Long dmin = new Long(INFINITY); 
 		 String node = "";
 //		 for(ArrayWritable array:values){
+		 String[] represents = null;
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
 //			  String[] represents = s.split(" ");
@@ -40,9 +41,15 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 			 
 //			 String[] represents = array.toStrings();
 //			 if(this.isNode(array)){
+
 			 if(this.isNode(s)){
 //				 node = array.toStrings();
 				 node = s;
+				 represents = this.myParser(node);
+				 Long currentDistance = Long.parseLong(represents[1]);
+				 if(currentDistance<dmin){
+					 dmin = currentDistance;
+				 }
 			 }else{
 				 Long d = Long.parseLong(s);
 				 if(d<dmin){
@@ -50,7 +57,6 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 				 }
 			 }
 		 }
-			 String[] represents = this.myParser(node);
 			 represents[1]=dmin.toString();
 			 String newNode="";
 			 for(int i=0; i<represents.length;i++){
