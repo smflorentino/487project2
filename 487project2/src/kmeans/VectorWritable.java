@@ -53,7 +53,7 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	public VectorWritable(int i, int c) {
 		_data = new IntWritable(i);
 		_center = new BooleanWritable(false);
-		_centroid.set(c);
+		_centroid=new IntWritable(c);
 	}
 	
 	@Override
@@ -107,7 +107,15 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	public boolean isCentroid() {
 		return _center.get();
 	}
+	
+	public int getCentroid() {
+		return _centroid.get();
+	}
 
+	public void setCentroid(int i) {
+		_centroid.set(i);
+	}
+	
 	public String toString() {
 		if(_center.get()) {
 			return "c" + _data.toString();
@@ -115,20 +123,29 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 		return _data.toString();
 	}
 	
+	
+	public boolean clusterEquals(VectorWritable v) {
+		return _centroid.get() == v.getCentroid();
+	}
+	
 	public static VectorWritable parseVector(String s) {
 		StringTokenizer st = new StringTokenizer(s);
 		String current=null;
+		String current2=null;
 		while(st.hasMoreTokens()) {
 			current = st.nextToken();
 			if(current.startsWith("c")) {
+				//System.out.println("Parsing Centroid:" + current);
 				//found a centroid, we don't care about the second token
 				return new VectorWritable(Integer.parseInt(current.substring(1)),true);
 			}
 			else {
 				//we have ONE more token, the assigned centroid for that datapoint
 				try {
-					//all other iterations we have a cluster assigned
-				return new VectorWritable(Integer.parseInt(current), Integer.parseInt(st.nextToken())); 
+					//all other iterations we have a cluster assigned, we parse starting from the character index 1 to avoid the 'c' in 'c21' 
+					current2 = st.nextToken();
+					//System.out.println("Parsing Datapoint...Current: " + current + "Current 2:" + current2);
+					return new VectorWritable(Integer.parseInt(current), Integer.parseInt(current2.substring(1))); 
 				}
 				catch (NoSuchElementException e) {
 					//this will happen for the FIRST iteration only, when no cluster is assigned

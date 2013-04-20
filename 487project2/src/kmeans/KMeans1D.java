@@ -41,7 +41,13 @@ public class KMeans1D {
 	 
 	 private ArrayList<VectorWritable> _points;
 	 
-    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+	 @Override
+	 public void setup(Context context) {
+		 //read in the clusters file
+		// Path path = new Path("hdfs://localhost)
+	 }
+	 
+     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     	_points = new ArrayList<VectorWritable>();
     	String current = value.toString();
     	VectorWritable currentCenter=null;
@@ -62,6 +68,7 @@ public class KMeans1D {
     	//TODO: add global checking for multiple mappers and sleep accordingly
     	
     	for(VectorWritable point : _points) {
+    		//TODO get the centroid from the vector itself
     		currentVal = point.get();
     		int lowestDistance;
     		currentCenter = _centers.get(0); //get the first centroid
@@ -71,13 +78,21 @@ public class KMeans1D {
     		for(int i=1;i<_centers.size();i++) { //resume at second centroid
     			I=_centers.get(i);
     			temp = Math.abs(currentVal-I.get());
+    			System.out.println("Current Center: " + currentCenter.toString() + " Temp:" + temp);
     			if(temp < lowestDistance) {
-    				_incremented.set(true); //now we have to continue, since a cluster assignment changed
+    				//_incremented.set(true); //now we have to continue, since a cluster assignment changed
     				lowestDistance = temp;
     				currentCenter = I;
     			}
     		}
-    	
+    		
+    		//check if cluster assignment changed
+    		System.out.println("checking: point: " + point.toString() + " centroid: " + currentCenter.toString());
+    		if(point.clusterEquals(currentCenter)) {
+    			point.setCentroid(currentCenter.get());
+    			_incremented.set(true);
+    		}
+    		
         	context.write(currentCenter,point);
     	} 
     	
