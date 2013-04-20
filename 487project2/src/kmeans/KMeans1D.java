@@ -1,11 +1,16 @@
 package kmeans;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+//import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -23,6 +28,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.fs.FileSystem;
 
 public class KMeans1D {
        
@@ -35,7 +41,7 @@ public class KMeans1D {
 
  public static class Map extends Mapper<LongWritable, Text, VectorWritable, VectorWritable> {
 
-	 private static ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
+	 private ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
 	 private static BooleanWritable _changeMade = new BooleanWritable(false);
 	 private static BooleanWritable _incremented = new BooleanWritable(false);
 	 
@@ -44,7 +50,43 @@ public class KMeans1D {
 	 @Override
 	 public void setup(Context context) {
 		 //read in the clusters file
-		// Path path = new Path("hdfs://localhost)
+		 // Path path = new Path("hdfs://localhost)
+		 Configuration config = context.getConfiguration();
+		 int tries = 0;
+
+		 while(tries <10) {
+			 try {
+				 FileSystem dfs = FileSystem.get(config);
+				 Path s = new Path("/centers/centers.txt");
+				 FSDataInputStream fs = dfs.open(s);
+				 BufferedReader reader = new BufferedReader( new InputStreamReader(fs));
+				 String str = reader.readLine();
+				 while(str != null) {
+					 System.out.println(str);
+					 str = reader.readLine();
+					 _centers.add(VectorWritable.parseVector(str));
+				 }
+
+				 //success. exit the method.
+				 return;
+
+			 } catch (IOException e) {
+				 //something happening. try again.
+				 System.err.println("Cannot get the DFS. Trying again...");
+				 tries++;
+				 try {
+					 Thread.sleep(1000);
+				 } catch (InterruptedException e1) {
+					 // TODO Auto-generated catch block
+					 e1.printStackTrace();
+				 }
+				 e.printStackTrace();
+			 }
+
+		 }
+
+
+
 	 }
 	 
      public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -149,7 +191,8 @@ public class KMeans1D {
     
     
  }
-
+//asd
+ 
  public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();   
         Job job = new Job(conf, "wordcount");
