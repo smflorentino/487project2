@@ -37,9 +37,11 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	 * @return -<key,value> pair of either <nodeId, node metadata> or <neighbor's nodeId, a distance to neighbor from start>
 	 */
 //    public void map(LongWritable nodeId, ArrayWritable nodeAW, Context context) throws IOException, InterruptedException {
-	    public void map(LongWritable nodeId, Text nodeAsText, Context context) throws IOException, InterruptedException {
+	    public void map(LongWritable lineNo, Text nodeAsText, Context context) throws IOException, InterruptedException {
 			 String s = nodeAsText.toString();
 			 String[] represents = this.myParser(s);
+			 long id = Long.parseLong(represents[1]);
+			 LongWritable nodeId = new LongWritable(id);
 //    	String[] nodeArray = nodeAW.toStrings();
 //    	Node node = this.getNode(nodeArray);
 //    	LongWritable distance = new LongWritable(node.getDistance());
