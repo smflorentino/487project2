@@ -32,6 +32,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 
 public class KMeans1D {
        
@@ -185,6 +186,7 @@ public class KMeans1D {
         center = new VectorWritable(sum/numOfPoints,true);
         
         //TODO change this
+        _centers.add(center);
         context.write(center,center);
         //add all other points back to the file
         for(VectorWritable p : points) {
@@ -194,36 +196,27 @@ public class KMeans1D {
     }
     
     @Override
-    public void cleanup(Context context) {
+    public void cleanup(Context context) throws IOException {
     	//write all the new centers back to the clusters file
     	//append the counter to our file name so as not to overwrite anything
     	context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CLUSTERFILES_CREATED).increment(1);
     	int fileNumber = (int) context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CLUSTERFILES_CREATED).getValue();
-    	
-    	Configuration config = context.getConfiguration();
-			 try {
-				 FileSystem dfs = FileSystem.get(config);
-				 Path s = new Path("/centersoutputs/centers" + fileNumber + ".txt");
-				 //dfs.createNewFile(s);
-				 FSDataOutputStream fs = dfs.create(s);//dfs.open(s);
-				 fs.writeUTF("line1111111111111111111\n");
-				 fs.writeUTF("line2222222222222222222\n");
-				 fs.close();
-				 //success. exit the method.
-				 return;
 
-			 } catch (IOException e) {
-				 //something happening. try again.
-				 System.err.println("Cannot get the DFS. Trying again...");
-				// tries++;
-				 try {
-					 Thread.sleep(1000);
-				 } catch (InterruptedException e1) {
-					 // TODO Auto-generated catch block
-					 e1.printStackTrace();
-				 }
-				 e.printStackTrace();
-			 }
+    	Configuration config = context.getConfiguration();
+    	FileSystem dfs = FileSystem.get(config);
+    	Path s = new Path("/centersoutputs/centers" + fileNumber + ".txt");
+    	//dfs.createNewFile(s);
+    	FSDataOutputStream fs = dfs.create(s);//dfs.open(s);
+    	
+    	//write each of the centroids back to a centers file
+    	for(VectorWritable center : _centers) {
+    		fs.writeUTF(center.toString());
+    		fs.writeUTF("\n");
+    	}
+    	fs.close();
+    	//success. exit the method.
+    	return;
+
 
     }
  }
@@ -251,8 +244,12 @@ public class KMeans1D {
    // job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
     
     job.waitForCompletion(true);
+    
+    FileSystem.get(conf).delete(new Path("/centers/centers.txt"),false);
+    
+    FileUtil.copyMerge(FileSystem.get(conf), new Path("/centersoutputs"), FileSystem.get(conf), new Path("/centers/centers.txt"), true, conf,"");
     System.out.println(job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue()+ "KMEANS COUNTER");
-   // tt.writeEndTime();
+    // tt.writeEndTime();
  }
         
 }
