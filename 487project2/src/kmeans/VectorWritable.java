@@ -73,7 +73,7 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 		return _data.get();
 	}
 	
-	public boolean setCentroid(IntWritable c) {
+	public boolean setCentroid(VectorWritable c) {
 		if(_centroid.get()!=c.get()) {
 			//centroid has changed
 			_centroid.set(c.get());
@@ -129,6 +129,7 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	}
 	
 	public static VectorWritable parseVector(String s) {
+		System.out.println("Parsing: " + s);
 		StringTokenizer st = new StringTokenizer(s);
 		String current=null;
 		String current2=null;

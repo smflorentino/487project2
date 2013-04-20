@@ -1,7 +1,9 @@
 package kmeans;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 //import java.nio.file.FileSystem;
@@ -11,6 +13,7 @@ import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -35,7 +38,8 @@ public class KMeans1D {
 	
 	public static final int NUM_OF_CENTROIDS = 2;
 	public static enum KMEANS_COUNTER {
-		NUMBER_OF_CHANGES
+		NUMBER_OF_CHANGES,
+		NUMBER_OF_CLUSTERFILES_CREATED
 	};
 	
 
@@ -58,15 +62,16 @@ public class KMeans1D {
 			 try {
 				 FileSystem dfs = FileSystem.get(config);
 				 Path s = new Path("/centers/centers.txt");
+				 
 				 FSDataInputStream fs = dfs.open(s);
 				 BufferedReader reader = new BufferedReader( new InputStreamReader(fs));
 				 String str = reader.readLine();
 				 while(str != null) {
 					 System.out.println(str);
-					 str = reader.readLine();
 					 _centers.add(VectorWritable.parseVector(str));
+					 str = reader.readLine();
 				 }
-
+				 	
 				 //success. exit the method.
 				 return;
 
@@ -90,26 +95,22 @@ public class KMeans1D {
 	 }
 	 
      public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-    	_points = new ArrayList<VectorWritable>();
+    	VectorWritable point; 
     	String current = value.toString();
     	VectorWritable currentCenter=null;
     	int currentVal=0;
     	if(key.get() ==0 ) {
     		//start of a new job
     	}
-    	if(current.startsWith("c")) {
-    		_centers.add(VectorWritable.parseVector(current));
-    		//VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
-    		//_centers.add(center); //test
-    		//context.write(center,center);
-    	}
-    	else {
-    		_points.add(VectorWritable.parseVector(current));
-    	}
+    	
+    	//read the datapoint.
+    	point = VectorWritable.parseVector(current);
+    	//_points.add(VectorWritable.parseVector(current));
+    
+    	
     	//we (hopefully) have all the centers, let's calculate
     	//TODO: add global checking for multiple mappers and sleep accordingly
     	
-    	for(VectorWritable point : _points) {
     		//TODO get the centroid from the vector itself
     		currentVal = point.get();
     		int lowestDistance;
@@ -129,14 +130,13 @@ public class KMeans1D {
     		}
     		
     		//check if cluster assignment changed
-    		System.out.println("checking: point: " + point.toString() + " centroid: " + currentCenter.toString());
-    		if(point.clusterEquals(currentCenter)) {
-    			point.setCentroid(currentCenter.get());
+    		System.out.println("checking: point centroid: " + point.getCentroid() + " against centroid: " + currentCenter.toString());
+    		if(point.setCentroid(currentCenter)) {
     			_incremented.set(true);
     		}
     		
         	context.write(currentCenter,point);
-    	} 
+    	 
     	
 
     }
@@ -158,6 +158,8 @@ public class KMeans1D {
  
 
  public static class Reduce extends Reducer<VectorWritable, VectorWritable, VectorWritable, VectorWritable> {
+
+	ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
 	
     public void reduce(VectorWritable key, Iterable<VectorWritable> values, Context context) 
       throws IOException, InterruptedException {
@@ -181,6 +183,8 @@ public class KMeans1D {
         }
         //calculate the new centroid
         center = new VectorWritable(sum/numOfPoints,true);
+        
+        //TODO change this
         context.write(center,center);
         //add all other points back to the file
         for(VectorWritable p : points) {
@@ -189,7 +193,39 @@ public class KMeans1D {
         }
     }
     
-    
+    @Override
+    public void cleanup(Context context) {
+    	//write all the new centers back to the clusters file
+    	//append the counter to our file name so as not to overwrite anything
+    	context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CLUSTERFILES_CREATED).increment(1);
+    	int fileNumber = (int) context.getCounter(KMeans1D.KMEANS_COUNTER.NUMBER_OF_CLUSTERFILES_CREATED).getValue();
+    	
+    	Configuration config = context.getConfiguration();
+			 try {
+				 FileSystem dfs = FileSystem.get(config);
+				 Path s = new Path("/centersoutputs/centers" + fileNumber + ".txt");
+				 //dfs.createNewFile(s);
+				 FSDataOutputStream fs = dfs.create(s);//dfs.open(s);
+				 fs.writeUTF("line1111111111111111111\n");
+				 fs.writeUTF("line2222222222222222222\n");
+				 fs.close();
+				 //success. exit the method.
+				 return;
+
+			 } catch (IOException e) {
+				 //something happening. try again.
+				 System.err.println("Cannot get the DFS. Trying again...");
+				// tries++;
+				 try {
+					 Thread.sleep(1000);
+				 } catch (InterruptedException e1) {
+					 // TODO Auto-generated catch block
+					 e1.printStackTrace();
+				 }
+				 e.printStackTrace();
+			 }
+
+    }
  }
 //asd
  
