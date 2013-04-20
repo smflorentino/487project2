@@ -40,7 +40,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	    public void map(LongWritable lineNo, Text nodeAsText, Context context) throws IOException, InterruptedException {
 			 String s = nodeAsText.toString();
 			 String[] represents = this.myParser(s);
-			 long id = Long.parseLong(represents[1]);
+			 long id = Long.parseLong(represents[0]);
 			 LongWritable nodeId = new LongWritable(id);
 //    	String[] nodeArray = nodeAW.toStrings();
 //    	Node node = this.getNode(nodeArray);
