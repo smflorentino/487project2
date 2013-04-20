@@ -33,9 +33,10 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 		 Long dmin = new Long(INFINITY); 
 		 String node = "";
 //		 for(ArrayWritable array:values){
-		 String[] represents = null;
+		 String[] represents = new String[3];
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
+			System.out.println("S is: "+s);
 //			  String[] represents = s.split(" ");
 //			 String[] represents = this.myParser(s);
 			 
@@ -44,7 +45,8 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 
 			 if(this.isNode(s)){
 //				 node = array.toStrings();
-				 node = s;
+				System.out.println("THERE IS A NODE"); 
+				node = s;
 				 represents = this.myParser(node);
 				 Long currentDistance = Long.parseLong(represents[1]);
 				 if(currentDistance<dmin){
@@ -57,7 +59,11 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 				 }
 			 }
 		 }
-			 represents[1]=dmin.toString();
+			if(represents==null){
+				System.out.println("represents null. node is: "+node);
+			}else{ 
+			represents[1]=dmin.toString();
+			}
 			 String newNode="";
 			 for(int i=0; i<represents.length;i++){
 				newNode=newNode+" "+represents[i]; 
@@ -87,7 +93,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 	}
 	
 	private boolean isNode(String s){
-		if(s.contains(" ")){
+		if(s.contains(":")){
 			return true;
 		}
 		return false;
