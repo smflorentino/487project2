@@ -24,9 +24,10 @@ public class GraphsDriver  {
 		};
 	
 	public static void main(String args[]) throws Exception {
-		//TODO: determine the number of nodes in graph by parsing file
-		long numNodes=0;
-//		do{
+		//TODO: calculate the number of nodes in graph by parsing file
+		long numNodes=110;
+		Counter c1;
+		do{
 			 Configuration conf = new Configuration();
 		     
 		     Job job = new Job(conf, "Graphs");
@@ -53,9 +54,9 @@ public class GraphsDriver  {
 		     
 		     
 		     Counters counters = job.getCounters();
-		     Counter c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
+		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
 		     System.out.println("Counter value at end: "+c1.getValue());
-	//	}while(c1.getValue()<numNodes);
+		}while(c1.getValue()<numNodes);
     	 
      
 	}
@@ -66,7 +67,8 @@ public class GraphsDriver  {
 	//TODO: figure out how to use "counter"
 	
 //if not done, repeat. 
-	public void parseInputFile(String inputFileName){
+	public long getNumNodes(String inputFileName){
+		return 0;
 		
 	}
 	
