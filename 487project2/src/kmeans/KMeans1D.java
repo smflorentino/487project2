@@ -100,7 +100,7 @@ public class KMeans1D {
     	if(current.startsWith("c")) {
     		_centers.add(VectorWritable.parseVector(current));
     		//VectorWritable center = new VectorWritable(Integer.parseInt(current.substring(1)),true);
-    		//_centers.add(center);
+    		//_centers.add(center); //test
     		//context.write(center,center);
     	}
     	else {
