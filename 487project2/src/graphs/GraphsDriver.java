@@ -30,17 +30,18 @@ public class GraphsDriver  {
 		long numNodes=110;
 		Counter c1;
 		long currentIteration = 1;
+	     Path inputPath = new Path("/*.*");
+	     Path outputPath = new Path("/graphsData");
 		do{
 			 Configuration conf = new Configuration();
-		     Path inputPath = new Path("/*.*");
-		     Path outputPath = new Path("/graphsData");
-		     if(currentIteration == 1){
+		     if(currentIteration != 1){
 		     //************ Scott's iterative code *********************************//
 		   //delete the old input directory, and re-create it
 				FileSystem.get(conf).delete(inputPath, true);
 				FileSystem.get(conf).mkdirs(inputPath);
 			//copy the output from the last MR job
-				FileUtil.copy(FileSystem.get(conf), new Path("/graphsData" + "/part-r-00000"), FileSystem.get(conf), new Path("/part-r-00000"), true, conf);
+				inputPath = new Path("/part-r-00000");
+				FileUtil.copy(FileSystem.get(conf), new Path("/graphsData" + "/part-r-00000"), FileSystem.get(conf), inputPath, true, conf);
 			//delete the output directory from the last job
 				FileSystem.get(conf).delete(outputPath, true);
 			//********************end Scott's iterative code ***************************//
@@ -71,9 +72,10 @@ public class GraphsDriver  {
 		     
 		     
 		     Counters counters = job.getCounters();
-		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
-		     System.out.println("Counter value at end: "+c1.getValue());
+//		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
+//		     System.out.println("Counter value at end: "+c1.getValue());
 		     currentIteration++;
+		     System.out.println("Current iteration: "+currentIteration);
 		}while(currentIteration<numNodes);
     	 
      
