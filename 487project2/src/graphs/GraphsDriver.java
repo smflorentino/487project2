@@ -29,10 +29,12 @@ public class GraphsDriver  {
 		//TODO: calculate the number of nodes in graph by parsing file
 		long numNodes=110;
 		Counter c1;
+		long currentIteration = 1;
 		do{
 			 Configuration conf = new Configuration();
 		     Path inputPath = new Path("/*.*");
 		     Path outputPath = new Path("/graphsData");
+		     if(currentIteration == 1){
 		     //************ Scott's iterative code *********************************//
 		   //delete the old input directory, and re-create it
 				FileSystem.get(conf).delete(inputPath, true);
@@ -42,7 +44,7 @@ public class GraphsDriver  {
 			//delete the output directory from the last job
 				FileSystem.get(conf).delete(outputPath, true);
 			//********************end Scott's iterative code ***************************//
-		     
+		     }
 		     Job job = new Job(conf, "Graphs");
 		     		     
 		     job.setOutputKeyClass(LongWritable.class);
@@ -71,7 +73,8 @@ public class GraphsDriver  {
 		     Counters counters = job.getCounters();
 		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
 		     System.out.println("Counter value at end: "+c1.getValue());
-		}while(c1.getValue()<numNodes);
+		     currentIteration++;
+		}while(currentIteration<numNodes);
     	 
      
 	}
