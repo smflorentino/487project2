@@ -223,7 +223,7 @@ public class KMeans1D {
 		int counter = 0;
 		int internalCounter=0;
 		Configuration conf = new Configuration();   
-		Job job = new Job(conf, "wordcount");
+		Job job = new Job(conf, "kmeans");
 
 		job.setOutputKeyClass(VectorWritable.class);
 		job.setOutputValueClass(VectorWritable.class);
@@ -249,7 +249,7 @@ public class KMeans1D {
 
 
 			internalCounter++;
-			counter =0;
+			counter=0; //reset the counter back to zero, as the NUMBER_OF_CHANGES counter will also be zero when we start the next MR job
 			System.out.println("****************************\nStarting Iteration + " + internalCounter + "\n****************************");
 			System.out.println("Current Results so far:");
 			//print out stats from the job that just completed
@@ -286,12 +286,12 @@ public class KMeans1D {
 			//org.apache.hadoop.fs.FileUtil.copyMerge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, boolean deleteSource, Configuration conf, String addString);
 			FileUtil.copyMerge(FileSystem.get(conf), new Path("/centersoutputs"), FileSystem.get(conf), new Path("/centers/centers.txt"), true, conf,"");
 
-			System.out.println(job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue()+ "KMEANS COUNTER");
+			System.out.println("If the following counter is 1, we have more iterations: " + job.getCounters().findCounter( KMEANS_COUNTER.NUMBER_OF_CHANGES).getValue());
 
 
 			//start the new job
 			conf = new Configuration();   
-			job = new Job(conf, "wordcount");
+			job = new Job(conf, "kmeans");
 
 			job.setOutputKeyClass(VectorWritable.class);
 			job.setOutputValueClass(VectorWritable.class);
@@ -311,7 +311,7 @@ public class KMeans1D {
 			
 		}
 		//print out stats from the job that just completed
-		System.out.println("****************************\n Clustering Complete!!! Here are the final results.\nThey are also available in the output directory.\n****************************");
+		System.out.println("****************************\nClustering Complete!!! Here are the final results.\nThey are also available in the output directory.\n****************************");
 		Path s = new Path(args[1]+"/part-r-00000");
 		FSDataInputStream fs = FileSystem.get(conf).open(s);
 		BufferedReader reader = new BufferedReader( new InputStreamReader(fs));
