@@ -1,6 +1,8 @@
 package graphs;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -29,6 +31,17 @@ public class GraphsDriver  {
 		Counter c1;
 		do{
 			 Configuration conf = new Configuration();
+		     Path inputPath = new Path("/*.*");
+		     Path outputPath = new Path("/graphsData");
+		     //************ Scott's iterative code *********************************//
+		   //delete the old input directory, and re-create it
+				FileSystem.get(conf).delete(inputPath, true);
+				FileSystem.get(conf).mkdirs(inputPath);
+			//copy the output from the last MR job
+				FileUtil.copy(FileSystem.get(conf), new Path("/*.*" + "/part-r-00000"), FileSystem.get(conf), new Path("/graphsData"+ "/part-r-00000"), true, conf);
+			//delete the output directory from the last job
+				FileSystem.get(conf).delete(outputPath, true);
+			//********************end Scott's iterative code ***************************//
 		     
 		     Job job = new Job(conf, "Graphs");
 		     		     
@@ -38,9 +51,11 @@ public class GraphsDriver  {
 		         
 		     job.setMapperClass(GraphsMapper.class);
 		     job.setReducerClass(GraphsReducer.class);
+		     
 
-		     FileInputFormat.addInputPath(job, new Path("/*.*"));
-		     FileOutputFormat.setOutputPath(job, new Path("/graphsData"));
+
+		     FileInputFormat.addInputPath(job, inputPath);
+		     FileOutputFormat.setOutputPath(job, outputPath);
 
 		     
 //		     TODO: return to args after testing
