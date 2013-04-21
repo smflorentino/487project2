@@ -220,14 +220,9 @@ public class KMeans1D {
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setOutputFormatClass(TextOutputFormat.class);
 
-		//NEED TO FIGURE OUT COMMITTERS
-
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		job.setJarByClass(KMeans1D.class);
-		// TimeTracker tt = new TimeTracker();
-		// tt.writeStartTime();
-		// job.getCounters().findCounter(KMEANS_COUNTER.NUMBER_OF_CHANGES).increment(1);
 
 		job.waitForCompletion(true);
 
