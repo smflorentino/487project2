@@ -13,6 +13,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -64,10 +65,10 @@ public class KMeans1D {
 				 String str = reader.readLine();
 				 while(str != null) {
 					 System.out.println(str);
-					 _centers.add(VectorWritable.parseVector(str));
+					 _centers.add(VectorWritable.parseCentroid(str));
 					 str = reader.readLine();
 				 }
-				 	
+				 reader.close();
 				 //success. exit the method.
 				 return;
 
@@ -182,7 +183,7 @@ public class KMeans1D {
         
         //TODO change this
         _centers.add(center);
-        context.write(center,center);
+       // context.write(center,center);
         //add all other points back to the file
         for(VectorWritable p : points) {
         	System.out.println("Current Point " + p.toString());
@@ -201,13 +202,17 @@ public class KMeans1D {
     	FileSystem dfs = FileSystem.get(config);
     	Path s = new Path("/centersoutputs/centers" + fileNumber + ".txt");
     	//dfs.createNewFile(s);
+    	//SequenceFile.Writer writer = SequenceFile.createWriter(dfs, config, s, VectorWritable.class, VectorWritable.class);
+    	//writer.append(key, val)
     	FSDataOutputStream fs = dfs.create(s);//dfs.open(s);
     	
     	//write each of the centroids back to a centers file
     	for(VectorWritable center : _centers) {
-    		fs.writeUTF(center.toString());
-    		fs.writeUTF("\n");
+    		//writer.append(center,center);
+    		fs.writeBytes(center.toString());
+    		fs.writeBytes("\n");
     	}
+    	//writer.close();
     	fs.close();
     	//success. exit the method.
     	return;
@@ -249,17 +254,35 @@ public class KMeans1D {
     	
     	internalCounter++;
     	counter =0;
-    	System.out.println("****************************\nStarting Iteration + " + internalCounter + "\n********************************");
+    	System.out.println("****************************\nStarting Iteration + " + internalCounter + "\n****************************");
+    	
+    	//print out stats from the job that just completed
+    	 Path s = new Path(args[1]+"/part-r-00000");
+		 FSDataInputStream fs = FileSystem.get(conf).open(s);
+		 BufferedReader reader = new BufferedReader( new InputStreamReader(fs));
+		 String str = reader.readLine();
+		 while(str != null) {
+			 System.out.println(str);
+			 str = reader.readLine();
+		 }
+    	reader.close();
+    	
+    	
     	//clean up from last job
     	
     	//delete the old input directory, and re-create it
     	FileSystem.get(conf).delete(inputPath, true);
-    	FileSystem.get(conf).create(inputPath);
+    	FileSystem.get(conf).mkdirs(inputPath);
+    	//FileSystem.get(conf).create(inputPath);
     	
     	//copy the output from the last MR job
+    	//FileUtil.co
     	FileUtil.copy(FileSystem.get(conf), new Path(args[1] + "/part-r-00000"), FileSystem.get(conf), new Path(args[0]+ "/part-r-00000"), true, conf);
     	
   
+    	//delete the output directory from the last job
+    	FileSystem.get(conf).delete(outputPath, true);
+    	
     	//delete the original centers file
         FileSystem.get(conf).delete(new Path("/centers/centers.txt"),false);
         

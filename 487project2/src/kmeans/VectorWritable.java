@@ -117,9 +117,9 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 	}
 	
 	public String toString() {
-		if(_center.get()) {
-			return "c" + _data.toString();
-		}
+		//if(_center.get()) {
+		//	return "c" + _data.toString();
+		//}
 		return _data.toString();
 	}
 	
@@ -128,6 +128,13 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 		return _centroid.get() == v.getCentroid();
 	}
 	
+	public static VectorWritable parseCentroid(String s1) {
+		String s = new String(s1);
+		for(int i=0;i<s.length();i++) {
+			System.out.println(s.charAt(i));
+		}
+		return new VectorWritable(Integer.parseInt(s));
+	}
 	public static VectorWritable parseVector(String s) {
 		System.out.println("Parsing: " + s);
 		StringTokenizer st = new StringTokenizer(s);
@@ -135,6 +142,15 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 		String current2=null;
 		while(st.hasMoreTokens()) {
 			current = st.nextToken();
+			System.out.print("Printing String:" +s);
+			/*for(int i=0;i<s.length();i++) {
+				System.out.println(s.charAt(i));
+			}*/
+			System.out.print("Printing Token"+ current);
+			/*for(int i=0;i<current.length();i++) {
+				System.out.println(current.charAt(i));
+			}*/
+			//System.out.println("Token: " + current + " Char At 0:" + current.charAt(0) + " Result" + (current.charAt(0) == 'c'));
 			if(current.startsWith("c")) {
 				//System.out.println("Parsing Centroid:" + current);
 				//found a centroid, we don't care about the second token
@@ -146,7 +162,7 @@ public class VectorWritable implements WritableComparable<VectorWritable> {
 					//all other iterations we have a cluster assigned, we parse starting from the character index 1 to avoid the 'c' in 'c21' 
 					current2 = st.nextToken();
 					//System.out.println("Parsing Datapoint...Current: " + current + "Current 2:" + current2);
-					return new VectorWritable(Integer.parseInt(current), Integer.parseInt(current2.substring(1))); 
+					return new VectorWritable(Integer.parseInt(current), Integer.parseInt(current2)); 
 				}
 				catch (NoSuchElementException e) {
 					//this will happen for the FIRST iteration only, when no cluster is assigned
