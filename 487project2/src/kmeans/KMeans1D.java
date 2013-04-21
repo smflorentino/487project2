@@ -98,19 +98,11 @@ public class KMeans1D {
 			String current = value.toString();
 			VectorWritable currentCenter=null;
 			int currentVal=0;
-			if(key.get() ==0 ) {
-				//start of a new job
-			}
 
 			//read the datapoint.
 			point = VectorWritable.parseVector(current);
-			//_points.add(VectorWritable.parseVector(current));
 
 
-			//we (hopefully) have all the centers, let's calculate
-			//TODO: add global checking for multiple mappers and sleep accordingly
-
-			//TODO get the centroid from the vector itself
 			currentVal = point.get();
 			int lowestDistance;
 			currentCenter = _centers.get(0); //get the first centroid
@@ -118,6 +110,7 @@ public class KMeans1D {
 			int temp;
 			VectorWritable I;
 			for(int i=1;i<_centers.size();i++) { //resume at second centroid
+				//check for a centroid that is closer to the one we have currently
 				I=_centers.get(i);
 				temp = Math.abs(currentVal-I.get());
 				if(temp < lowestDistance) {
