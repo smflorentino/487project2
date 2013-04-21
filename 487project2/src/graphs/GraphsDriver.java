@@ -40,7 +40,7 @@ public class GraphsDriver  {
 				FileSystem.get(conf).delete(inputPath, true);
 				FileSystem.get(conf).mkdirs(inputPath);
 			//copy the output from the last MR job
-				FileUtil.copy(FileSystem.get(conf), new Path("/*.*" + "/part-r-00000"), FileSystem.get(conf), new Path("/graphsData"+ "/part-r-00000"), true, conf);
+				FileUtil.copy(FileSystem.get(conf), new Path("/graphsData" + "/part-r-00000"), FileSystem.get(conf), new Path("/part-r-00000"), true, conf);
 			//delete the output directory from the last job
 				FileSystem.get(conf).delete(outputPath, true);
 			//********************end Scott's iterative code ***************************//
