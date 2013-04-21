@@ -163,24 +163,18 @@ public class KMeans1D {
 			int numOfPoints=0;
 
 			for (VectorWritable val : values) {
-
-				if(val.isCentroid()) {
-					//this is no longer needed
-					center = new VectorWritable(key.get(),true);
-				}
-				else {
+					//get the sum of all the values of the datapoints
 					sum+=val.get();
 					numOfPoints++;
 					points.add(new VectorWritable(val.get()));
-				}
 			}
-			//calculate the new centroid
+			//calculate the new centroid, based on the average of the datapoints
 			center = new VectorWritable(sum/numOfPoints,true);
 
-			//TODO change this
+			//save our new centroid, to be writted to the centers.txt file for the next iteration
 			_centers.add(center);
-			// context.write(center,center);
-			//add all other points back to the file
+
+			//add all other points back to the output of MR, each with the new centroid
 			for(VectorWritable p : points) {
 				context.write(p, center);
 			}
