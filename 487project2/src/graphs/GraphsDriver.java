@@ -27,7 +27,7 @@ public class GraphsDriver  {
 	
 	public static void main(String args[]) throws Exception {
 		//TODO: calculate the number of nodes in graph by parsing file
-		long numNodes=110;
+		long numNodes=50;
 		Counter c1;
 		long currentIteration = 1;
 	     Path inputPath = new Path("/*.*");
@@ -40,14 +40,14 @@ public class GraphsDriver  {
 				FileSystem.get(conf).delete(inputPath, true);
 				FileSystem.get(conf).mkdirs(inputPath);
 			//copy the output from the last MR job
-				inputPath = new Path("/part-r-00000");
+			//	inputPath = new Path("/part-r-00000");
 				FileUtil.copy(FileSystem.get(conf), new Path("/graphsData" + "/part-r-00000"), FileSystem.get(conf), inputPath, true, conf);
 			//delete the output directory from the last job
 				FileSystem.get(conf).delete(outputPath, true);
 			//********************end Scott's iterative code ***************************//
 		     }
 		     Job job = new Job(conf, "Graphs");
-		     		     
+			inputPath = new Path("/part-r-00000");     		     
 		     job.setOutputKeyClass(LongWritable.class);
 //		     job.setOutputValueClass(ArrayWritable.class);
 		     job.setOutputValueClass(Text.class);

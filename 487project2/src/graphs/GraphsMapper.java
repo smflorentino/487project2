@@ -111,7 +111,8 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     	String entry = "";
     	int index = 0;
     	if(s.contains("\t")){
-    		s = s.substring(s.indexOf("\t"+1));
+    		s = s.substring(s.indexOf("\t")+1);
+		System.out.println("Trimmed node.  String is now: "+s);
     	}
     	for(int i = 0; i<s.length(); i++){
     		if(s.charAt(i)==' '){
