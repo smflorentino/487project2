@@ -30,8 +30,8 @@ public class GraphsDriver  {
 		long numNodes=50;
 		Counter c1;
 		long currentIteration = 1;
-	     Path inputPath = new Path("/*.*");
-	     Path outputPath = new Path("/graphsData");
+	     Path inputPath = new Path(args[0]);
+	     Path outputPath = new Path(args[1]);
 		do{
 			 Configuration conf = new Configuration();
 		     if(currentIteration != 1){
@@ -41,13 +41,13 @@ public class GraphsDriver  {
 				FileSystem.get(conf).mkdirs(inputPath);
 			//copy the output from the last MR job
 			//	inputPath = new Path("/part-r-00000");
-				FileUtil.copy(FileSystem.get(conf), new Path("/graphsData" + "/part-r-00000"), FileSystem.get(conf), inputPath, true, conf);
+				FileUtil.copy(FileSystem.get(conf), new Path(args[1] + "/part-r-00000"), FileSystem.get(conf), new Path(args[0]+"/part-r-00000"), true, conf);
 			//delete the output directory from the last job
 				FileSystem.get(conf).delete(outputPath, true);
 			//********************end Scott's iterative code ***************************//
 		     }
 		     Job job = new Job(conf, "Graphs");
-			inputPath = new Path("/part-r-00000");     		     
+//			inputPath = new Path("/part-r-00000");     		     
 		     job.setOutputKeyClass(LongWritable.class);
 //		     job.setOutputValueClass(ArrayWritable.class);
 		     job.setOutputValueClass(Text.class);
@@ -56,14 +56,17 @@ public class GraphsDriver  {
 		     job.setReducerClass(GraphsReducer.class);
 		     
 
-
+/*		if(currentIteration==1){
 		     FileInputFormat.addInputPath(job, inputPath);
+		}else{
+			FileInputFormat.addInputPath(job, new Path("/part-r-00000"));
+		}
 		     FileOutputFormat.setOutputPath(job, outputPath);
-
+*/
 		     
 //		     TODO: return to args after testing
-//		     FileInputFormat.addInputPath(job, new Path(args[0]));
-//		     FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		     FileInputFormat.addInputPath(job, new Path(args[0]));
+		     FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		     
 		     job.setJarByClass(GraphsDriver.class);
 		     job.waitForCompletion(true);

@@ -36,7 +36,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 		 String[] represents = new String[3];
 		 for(Text nodeAsText:values){
 			 String s = nodeAsText.toString();
-			System.out.println("S is: "+s);
+		//	System.out.println("S is: "+s);
 //			  String[] represents = s.split(" ");
 //			 String[] represents = this.myParser(s);
 			 
@@ -45,7 +45,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 
 			 if(this.isNode(s)){
 //				 node = array.toStrings();
-				System.out.println("THERE IS A NODE"); 
+		//		System.out.println("THERE IS A NODE"); 
 				node = s;
 				 represents = this.myParser(node);
 				 Long currentDistance = Long.parseLong(represents[1]);
@@ -102,7 +102,11 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
     	String[] array = new String[3];
     	String entry = "";
     	int index = 0;
+	if(s.contains("\t")){
+		s = s.substring(s.indexOf('\t')+1);
+	}
     	for(int i = 0; i<s.length(); i++){
+		
     		if(s.charAt(i)==' '){
     			if(index<3){
     				array[index]=entry;

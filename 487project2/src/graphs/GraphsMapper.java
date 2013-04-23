@@ -40,7 +40,9 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	    public void map(LongWritable lineNo, Text nodeAsText, Context context) throws IOException, InterruptedException {
 			 String s = nodeAsText.toString();
 			 String[] represents = this.myParser(s);
+//if(represents[0]!=null){
 			 long id = Long.parseLong(represents[0]);
+			
 			 LongWritable nodeId = new LongWritable(id);
 //    	String[] nodeArray = nodeAW.toStrings();
 //    	Node node = this.getNode(nodeArray);
@@ -61,7 +63,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     	}
     	//consider the node that was passed in as visited, so increment the counter    	
     	context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
-    	
+  //  }	
     }
     
     /**
