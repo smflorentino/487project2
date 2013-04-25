@@ -94,6 +94,7 @@ public class GraphsReducer extends Reducer<LongWritable, Text, LongWritable, Tex
 	
 	private boolean isNode(String s){
 		if(s.contains(":")){
+			//context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
 			return true;
 		}
 		return false;

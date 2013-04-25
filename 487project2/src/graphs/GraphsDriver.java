@@ -1,5 +1,9 @@
 package graphs;
 
+import java.io.InputStream;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.FileInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -27,7 +31,8 @@ public class GraphsDriver  {
 	
 	public static void main(String args[]) throws Exception {
 		//TODO: calculate the number of nodes in graph by parsing file
-		long numNodes=50;
+		//long numNodes=getNumNodes(args[0]+"/inputGraph.txt");
+	//	long numNodes = 50;
 		Counter c1;
 		long currentIteration = 1;
 	     Path inputPath = new Path(args[0]);
@@ -64,7 +69,7 @@ public class GraphsDriver  {
 		     FileOutputFormat.setOutputPath(job, outputPath);
 */
 		     
-//		     TODO: return to args after testing
+
 		     FileInputFormat.addInputPath(job, new Path(args[0]));
 		     FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		     
@@ -75,11 +80,12 @@ public class GraphsDriver  {
 		     
 		     
 		     Counters counters = job.getCounters();
-//		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
+		     c1 = counters.findCounter(GRAPHS_COUNTER.INCOMING_GRAPHS);
 //		     System.out.println("Counter value at end: "+c1.getValue());
 		     currentIteration++;
 		     System.out.println("Current iteration: "+currentIteration);
-		}while(currentIteration<numNodes);
+			System.out.println("Value of counter: "+c1.getValue());
+		}while(currentIteration<c1.getValue());
     	 
      
 	}
@@ -89,10 +95,30 @@ public class GraphsDriver  {
 //check if termination condition satisfied (#nodes with distance infinity = 0, use "counter" in Hadoop)
 	//TODO: figure out how to use "counter"
 	
-//if not done, repeat. 
-	public long getNumNodes(String inputFileName){
-		return 0;
-		
-	}
+//adapted from stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java 
+	public static long getNumNodes(String inputFileName)throws IOException{
+		InputStream is = new BufferedInputStream(new FileInputStream(inputFileName));
+		try{
+			byte[] c = new byte[1024];
+			int count = 0;
+			int readChars = 0;
+			boolean empty = true;
+			while((readChars = is.read(c)) != -1){
+				empty = false;
+				for(int i = 0; i<readChars; i++){
+					if(c[i] == '\n'){
+						count++;
+					}
+				}
+			}
+			return (count == 0 && !empty) ? 1 : count;
+		}finally{
+			is.close();
+		}
+	}		
+
+
+
+
 	
 }

@@ -4,25 +4,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import graphs.GraphsDriver.GRAPHS_COUNTER;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
-import graphs.GraphRecordReader;
 
 //public class GraphsMapper extends Mapper<LongWritable, ArrayWritable, LongWritable, ArrayWritable> {
 public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text> {
-	public static enum GRAPHS_COUNTER {
+/*	public static enum GRAPHS_COUNTER {
 		  INCOMING_GRAPHS,
 		  PRUNING_BY_NCV,
 		  PRUNING_BY_COUNT,
 		  PRUNING_BY_ISO,
 		  ISOMORPHIC
 		};
-	
+*/	
 	/*for node: 
 	[0] - nodeId
 	[1] - distance from start node
@@ -40,7 +39,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	    public void map(LongWritable lineNo, Text nodeAsText, Context context) throws IOException, InterruptedException {
 			 String s = nodeAsText.toString();
 			 String[] represents = this.myParser(s);
-//if(represents[0]!=null){
+if(represents[0]!=null){
 			 long id = Long.parseLong(represents[0]);
 			
 			 LongWritable nodeId = new LongWritable(id);
@@ -63,7 +62,7 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     	}
     	//consider the node that was passed in as visited, so increment the counter    	
     	context.getCounter(GRAPHS_COUNTER.INCOMING_GRAPHS).increment(1);
-  //  }	
+    }	
     }
     
     /**
@@ -90,12 +89,12 @@ public class GraphsMapper extends Mapper<LongWritable, Text, LongWritable, Text>
     }
     
     
-    public Node getNode(String[] nodeArray){
-    	long id = (long) Integer.parseInt(nodeArray[0]);
-    	long distance = (long) Integer.parseInt(nodeArray[1]);
-    	List<Long> neighbors = this.getAdjacencyList(nodeArray[2]);
-    	return new Node(id,distance,neighbors);
-    }
+//    public Node getNode(String[] nodeArray){
+//    	long id = (long) Integer.parseInt(nodeArray[0]);
+//    	long distance = (long) Integer.parseInt(nodeArray[1]);
+//    	List<Long> neighbors = this.getAdjacencyList(nodeArray[2]);
+//    	return new Node(id,distance,neighbors);
+//    }
 
     public List<Long> getNeighbors(String listAsString){
     	ArrayList<Long> list = new ArrayList<Long>();
