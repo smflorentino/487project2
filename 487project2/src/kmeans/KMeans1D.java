@@ -30,6 +30,11 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 
+/**
+ * A Mapper and Reducer and corresponding Hadoop job for KMeans Clustering
+ * @author Scott
+ *
+ */
 public class KMeans1D {
 
 	/**
@@ -50,6 +55,7 @@ public class KMeans1D {
 		private static BooleanWritable _incremented = new BooleanWritable(false);
 
 
+		//read in the current centers for the current map operation
 		@Override
 		public void setup(Context context) {
 			//read in the clusters file
@@ -144,6 +150,11 @@ public class KMeans1D {
 	} 
 
 
+	/**
+	 * Calculate the position of the NEW centroid in the reduce phase
+	 * @author Scott
+	 *
+	 */
 	public static class Reduce extends Reducer<VectorWritable, VectorWritable, VectorWritable, VectorWritable> {
 
 		ArrayList<VectorWritable> _centers = new ArrayList<VectorWritable>();
@@ -173,6 +184,11 @@ public class KMeans1D {
 			}
 		}
 
+		
+		/*
+		 * Write the new Cluster Centers back to the centers.txt file for the next MR iteration
+		 * 
+		 */
 		@Override
 		public void cleanup(Context context) throws IOException {
 			//write all the new centers back to the clusters file

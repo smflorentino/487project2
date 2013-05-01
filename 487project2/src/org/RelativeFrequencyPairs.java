@@ -26,7 +26,11 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 //import archive.TextPair;
 //import archive.RelativeFrequencyPairs.LeftWordPartitioner;
-        
+        /**
+         * A class to compute relative frequencies using the Pairs method. 
+         * @author Scott
+         *
+         */
 public class RelativeFrequencyPairs {
         
 	public static class Map extends Mapper<LongWritable, Text, TextPair, IntWritable> {
@@ -45,6 +49,8 @@ public class RelativeFrequencyPairs {
 			StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
 			int wpos=0;
 			int npos=0;
+			//keep track of words we've already processed (this to avoid over-counting pairs that have the same key/value
+			//like word1,word1. For example, the file "word1 word1" represents ONE co-occurance of word1 with word1, NOT two.
 			HashMap<String, Integer> processedWords = new HashMap<String, Integer>();
 			while(tokenizer.hasMoreTokens()) {
 				w=tokenizer.nextToken();
@@ -62,14 +68,11 @@ public class RelativeFrequencyPairs {
 				
 				while(tokenizer2.hasMoreTokens()) {
 					n=tokenizer2.nextToken();
-				//	System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w);
 					if(npos!=wpos) { //this is our WORKING "neighbors" function
 						if(n.equals(w)) {
 							if(processedWords.get(n) == null) {
-					//			System.out.println("Adding N:" + n +"," + "1");
-								//System.out.println("Emitting KV Pair: "+ w + "," + n);
 								context.write(new TextPair(w,n),one);
-								context.write(new TextPair(w,STAR), one);
+								context.write(new TextPair(w,STAR), one); //emit our special "key,value" to be summed up by the reducer
 							}
 						} else {
 						//	System.out.println("Emitting KV Pair: "+ w + "," + n);
@@ -85,19 +88,6 @@ public class RelativeFrequencyPairs {
 				tokenizer2=new StringTokenizer(neighbors);
 			}
 			
-			//emit special pairs
-			/*
-			java.util.Map.Entry<String, Integer> pair;
-	    	Iterator<Entry<String, Integer>> it = hm.entrySet().iterator();
-	    	Text t; IntWritable i;
-	    	while(it.hasNext()) {
-	    		pair=it.next();
-	    		t=new Text(pair.getKey());
-	    		i = new IntWritable(pair.getValue());
-	    		System.out.println("Emitting KV Pair: "+ t + ",* I:" + i);
-	    		context.write(new TextPair(t, new Text("*")), i);
-	    	}*/
-	    	//end emit special map pairs
 
 		}
 
@@ -119,29 +109,14 @@ public class RelativeFrequencyPairs {
 	    	return a.getFirst().compareTo(b.getFirst());
 	    }
 	    
-	    /*@Override
-	    public int compare(WritableComparable a, WritableComparable b) {
-	      if (a instanceof TextPair && b instanceof TextPair) {
-	    	  TextPair A = (TextPair) a; TextPair B = (TextPair) b;
-	    	  if(A.getFirst().compareTo(B.getFirst()) == 0) {
-	    		  if(A.getSecond().equals(SPECIAL)) {
-	    			  return -1;
-	    		  }
-	    		  else {
-	    			  return 1;
-	    		  }
-	    	  } else {
-	    		  return A.compareTo(B);
-	    	  }
-	    	  
-	    	  
-	        //return ((TextPair) a).first.compareTo(((TextPair) b).first);
-	      }
-	      return super.compare(a, b)
-	    }*/
 	    
 	  }
 	
+	/**
+	 * Just like in co-occurance, we must partition the left word in every key to the same reducer
+	 * @author Scott
+	 *
+	 */
 public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritable> {
 	private static final char SPECIAL = '*';
 	public LeftWordPartitioner() {}
@@ -149,13 +124,6 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	public int getPartition(TextPair key, IntWritable value, int numReduceTasks) {
 		TextPair arg0 = key;
 		Text sec = new Text(key.getFirst().toString());
-		/*if(key.getSecond().charAt(0)== SPECIAL) {
-			
-			//System.out.println("*Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " " + sec.hashCode());
-			
-			return (arg0.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
-		}*/
-		//System.out.println("Partitioning...:" + arg0.getFirst() + "," + arg0.getSecond() + " "+ sec.hashCode());
 		return (sec.hashCode() & Integer.MAX_VALUE) % numReduceTasks;
 	}
 	 
@@ -167,23 +135,19 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
 	 
     public void reduce(TextPair key, Iterable<IntWritable> values, Context context) 
       throws IOException, InterruptedException {
-       //System.out.print("\nReducer Key: " + key.getFirst() + "," + key.getSecond());
-       //System.out.println("\nMarginal: " + _marginal + " Sum: " + _sum);
+    	//add up the "special "*" k,v pairs to get the total count (marginal)
         if(key.getSecond().toString().charAt(0) == SPECIAL) {
         	_sum=0;
         	_marginal=0;
         	for (IntWritable val : values) {
-                
-        		//System.out.print(" " + val.toString() + " ");
         		_marginal += val.get();
             }  
         	//System.out.println("-");
         } else {
         	for (IntWritable val : values) {
-        		//System.out.print(" " + val.toString() + " ");
                 _sum += val.get();
             }
-          //  System.out.println("test");
+        	//one we have the marginal, calculate the co-occurance frequency and emit it
             context.write(key, new FloatWritable( (float) _sum /_marginal));
             //_marginal =0;
            _sum=0;
@@ -200,11 +164,6 @@ public static class LeftWordPartitioner extends Partitioner<TextPair, IntWritabl
     //output of mappers
      job.setMapOutputKeyClass(TextPair.class);
      job.setMapOutputValueClass(IntWritable.class);
-    //job.setGroupingComparatorClass(cls)
-     // job.setSortComparatorClass(TextPairComparator.class);
-     //output of reducers
-  //  job.setSortComparatorClass(TextPairComparator.class);
-    //job.setSortComparatorClass(TextPairComparator.class);
     job.setOutputKeyClass(TextPair.class);
     job.setOutputValueClass(FloatWritable.class);
     job.setPartitionerClass(LeftWordPartitioner.class);

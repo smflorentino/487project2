@@ -27,7 +27,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import org.apache.hadoop.util.LineReader;// HashMapWritable, used to Provide Associative Array Functionality.
 
-
+/**
+ * A class with a Mapper and Reducer for processing co-occurance counts using the "Stripes" method
+ * @author Scott
+ *
+ */
 public class CooccuranceStripes {
 
 	public static class Map extends Mapper<LongWritable, Text, Text, HashMapWritable<Text,IntWritable>> {
@@ -42,45 +46,46 @@ public class CooccuranceStripes {
 			StringTokenizer tokenizer2 = new StringTokenizer(neighbors);
 			int npos=0,wpos=0;
 			Text w,n;
+			//keep track of words we've already processed (this to avoid over-counting pairs that have the same key/value
+			//like word1,word1. For example, the file "word1 word1" represents ONE co-occurance of word1 with word1, NOT two.
 			HashMap<Text, Integer> processedWords = new HashMap<Text, Integer>();
 			while (tokenizer.hasMoreTokens()) {
 				H=new HashMapWritable<Text, IntWritable>();
 				w=new Text(tokenizer.nextToken());
 				while(tokenizer2.hasMoreTokens()) {
 					n=new Text(tokenizer2.nextToken());
-					//System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w + "HashMap:" + H);
-					if(npos !=wpos) {
+					if(npos !=wpos) { //this is our "Neighbors" function...skip over the word we are currently on in the inner loop
 						if(n.toString().equals(w.toString())) {
 							if(processedWords.get(n) == null) {
 								if(H.get(n) == null) {
-									//System.out.println("Adding N:" + n +"," + "1");
+									//we have not seen this co-occurance yet, add it to the hashmap
 									H.put(n, one);
 								} else {
+									//add one to the value current in the Associative Array for that word
 									IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
-									//System.out.println("Adding N:" + n +"," + sum);
 									H.put(n, sum);
 								}   
 							}
 						}
 						else {
 							if(H.get(n) == null) {
+								//we have not seen this co-occurance yet, add it to the hashmap
 								H.put(n, one);
-								//System.out.println("Added One N. New Map:" + H);
 							} else {
+								//add one to the value current in the Associative Array for that word
 								IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
 								H.put(n, sum);
-								//System.out.println("Added another N. New Map:"+ H);
 							}
 						}
 					}
-					
+
 					npos++;  
 				}
 				npos=0;
 				wpos++;
 				processedWords.put(w,1);
 				tokenizer2 = new StringTokenizer(neighbors);
-				//System.out.println(" Mapper - Emmtting KV" + w.hashCode() + w.toString() + H.toString());
+				//emit the stripe for that particular word
 				context.write(w, H);
 			}
 		}
@@ -96,15 +101,18 @@ public class CooccuranceStripes {
 		}
 
 
-		/*@Override
-	public int getPartition(TextPair arg0, IntWritable arg1, int numReduceTasks) {
-		return (arg0.getFirst().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
-	}*/
+
 
 	}
+	
+	/**
+	 * Reduce class for Co-occurance Counts. Sum up all the stripes that have the same key (word) and emit them.
+	 * @author Scott
+	 *
+	 */
 	public static class Reduce1 extends Reducer<Text, HashMapWritable<Text, IntWritable>, Text, HashMapWritable<Text,IntWritable>> {
 		private static final IntWritable one = new IntWritable(1);
-		private HashMapWritable<Text,IntWritable> Hf;// = new HashMapWritable<Text, IntWritable>();
+		private HashMapWritable<Text,IntWritable> Hf;
 
 		@Override
 		public void reduce(Text key, Iterable<HashMapWritable<Text,IntWritable>> values, Context context) 
@@ -113,31 +121,26 @@ public class CooccuranceStripes {
 			int sum = 0;
 
 			for (HashMapWritable<Text,IntWritable> val : values) {
-				sum(val); //sum(Hf, val)
+				sum(val); //sum the associaive array
 			}
-			//System.out.println("Reducer - Emmtting KV" + key.toString() + "  " + Hf.toString()+"\n\n");
 			context.write(key, Hf);
 		}
 
+		
 		private void sum(HashMapWritable<Text,IntWritable> H) {
 			Text t;
 			for(Entry<Text, IntWritable> pair : H.entrySet()) {
-				//java.util.Map.Entry<Text, IntWritable> pair = (java.util.Map.Entry<Text, IntWritable>) it.next();
 				t= (Text) (pair.getKey());
-				//System.out.println("Currently Processing..............: "+ t.toString());
 				int current = (int) pair.getValue().get();
 				if(Hf.containsKey(t)) {
 					//Text t= (Text) pair.getKey();
-					
+
 
 					IntWritable sum = new IntWritable(current+Hf.get(t).get());
 					Hf.put(t, sum);
-					//System.out.println("Item Found! New Count: " + current + "word: " + t.toString());
 				} else {
-					//System.out.println("Item Found for the First Time - word: " + t.toString());
 					Hf.put(t, new IntWritable(current));
 				}
-				//System.out.println("Done with that word. HashMap: " + Hf.tString());
 			}
 		}
 	}
@@ -151,8 +154,8 @@ public class CooccuranceStripes {
 		job.setReducerClass(Reduce1.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(HashMapWritable.class);
-		
-		
+
+
 
 		job.setPartitionerClass(TextPartitioner.class);
 		job.setInputFormatClass(ParagraphInputFormat.class);

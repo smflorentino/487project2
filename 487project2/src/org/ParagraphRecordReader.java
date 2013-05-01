@@ -18,8 +18,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 
-/**ee
- * Treats keys as offset in file and value as line. 
+/**@author scottfo
+ * Treats keys as offset in file and value as paragraph. Modified version of LineRecord Reader to use a Paragraph record reader instead 
  */
 class ParagraphRecordReader extends RecordReader<LongWritable, Text> {
   private static final Log LOG = LogFactory.getLog(ParagraphRecordReader.class);

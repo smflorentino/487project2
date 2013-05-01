@@ -9,7 +9,8 @@ import org.apache.hadoop.io.WritableComparable;
 
 /**
  * 
- * A class to store the output keys of the mappers/reducers
+ * A class to store the output keys of the mappers/reducers when using the "Pairs Method"
+ * This is a custom "Key" type that stores a pair of words
  * Adapted from: http://my.safaribooksonline.com/book/databases/hadoop/9780596521974/serialization/id3548156
  */
 class TextPair implements WritableComparable<TextPair> {

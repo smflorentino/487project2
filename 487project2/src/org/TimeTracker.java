@@ -6,7 +6,12 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+/**
+ * 
+ * @author Scott
+ * This is a class that keeps track of runtime of Hadoop jobs and creates a file called jobtime.txt which has the total runtime (in seconds) of the job
+ * It's called in the main method of Hadoop Jobs
+ */
 public class TimeTracker {
 	FileWriter _fstream;
 	BufferedWriter _out;

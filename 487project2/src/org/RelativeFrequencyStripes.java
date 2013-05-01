@@ -27,7 +27,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 //import org.apache.hadoop.util.LineReader;// HashMapWritable, used to Provide Associative Array Functionality.
 
-
+/**
+ * A class to calculate Relative Frequencies, including Map and Reduce functions. Map is very similar to the co-occurance map, so see comments for Map's co-occurance
+ * @author Scott
+ *
+ */
 public class RelativeFrequencyStripes {
 
 	public static class Map extends Mapper<LongWritable, Text, Text, HashMapWritable<Text,IntWritable>> {
@@ -48,16 +52,13 @@ public class RelativeFrequencyStripes {
 				w=new Text(tokenizer.nextToken());
 				while(tokenizer2.hasMoreTokens()) {
 					n=new Text(tokenizer2.nextToken());
-					//System.out.println("Entering Nested While Loop. WPOS: " + wpos + " NPOS" + npos + "N:" + n + "W: " + w + "HashMap:" + H);
 					if(npos !=wpos) {
 						if(n.toString().equals(w.toString())) {
 							if(processedWords.get(n) == null) {
 								if(H.get(n) == null) {
-									//System.out.println("Adding N:" + n +"," + "1");
 									H.put(n, one);
 								} else {
 									IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
-									//System.out.println("Adding N:" + n +"," + sum);
 									H.put(n, sum);
 								}   
 							}
@@ -65,11 +66,9 @@ public class RelativeFrequencyStripes {
 						else {
 							if(H.get(n) == null) {
 								H.put(n, one);
-								//System.out.println("Added One N. New Map:" + H);
 							} else {
 								IntWritable sum = new IntWritable( ((IntWritable) H.get(n)).get() + one.get());
 								H.put(n, sum);
-								//System.out.println("Added another N. New Map:"+ H);
 							}
 						}
 					}
@@ -94,13 +93,15 @@ public class RelativeFrequencyStripes {
 			//return 0;
 		}
 
-
-		/*@Override
-	public int getPartition(TextPair arg0, IntWritable arg1, int numReduceTasks) {
-		return (arg0.getFirst().hashCode() & Integer.MAX_VALUE) % numReduceTasks;
-	}*/
-
 	}
+	
+	/**
+	 * Reduce phase for relative frequency. 
+	 * We sum up all of the Associative Arrays, then add up all the values in the hashmap to get the marginal.
+	 * We divide the joint count by the marginal and emit it
+	 * @author Scott
+	 *
+	 */
 	public static class Reduce1 extends Reducer<Text, HashMapWritable<Text, IntWritable>, TextPair, FloatWritable> {
 		private HashMapWritable<Text,IntWritable> Hf;// = new HashMapWritable<Text, IntWritable>();
 

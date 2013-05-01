@@ -7,7 +7,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 /**
- * A class that provides a line reader from an input stream.
+ * @author scottflo
+ * This class is extremely similar to Hadoop's line reader, but it splits on two \n characters in a row instead of one
+ * Our modifications are made in the readLine() method
+ * A class that provides a paragraph reader from an input stream.
  */
 class ParagraphReader {
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;

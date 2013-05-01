@@ -12,9 +12,8 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
-/** An {@link InputFormat} for plain text files.  Files are broken into lines.
- * Either linefeed or carriage-return are used to signal end of line.  Keys are
- * the position in the file, and values are the line of text.. */
+/** @author scottflo
+ * A Custom Input Format that uses a Paragraph Record Reader instead of a Line Record Reader */
 class ParagraphInputFormat extends FileInputFormat<LongWritable, Text> {
 
   @Override

@@ -10,9 +10,10 @@ import java.util.Set;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
 
-//import archive.HMapKFW;
-//import archive.HMapKIW;
-
+/**
+ * This class was provided on the Lintool Github page, and it is an associative array implementation for MapReduce
+ * HashMapWritable, provided by http://lintool.github.com/Cloud9/
+ */
 //HashMapWritable, provided by http://lintool.github.com/Cloud9/
 /*
 * Cloud9: A MapReduce Library for Hadoop
